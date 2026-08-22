@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -44,50 +45,61 @@ export default function LoginScreen({ navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.card}>
-        <Text style={styles.brand}>Help Us</Text>
-        <Text style={styles.title}>Entrar</Text>
-        <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.brand}>Help Us</Text>
+          <Text style={styles.headerText}>Cuidado, apoio e segurança.</Text>
+        </View>
 
-        <Text style={styles.label}>E-mail</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="seu@email.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.card}>
+          <Text style={styles.title}>Login</Text>
+          <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
 
-        <Text style={styles.label}>Senha</Text>
-        <TextInput
-          style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          placeholder="Digite sua senha"
-          secureTextEntry
-        />
+          <Text style={styles.label}>E-mail</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="seu@email.com"
+            placeholderTextColor="#8A94A6"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-        <Pressable
-          style={[
-            styles.primaryButton,
-            carregando && styles.primaryButtonDisabled,
-          ]}
-          onPress={entrar}
-          disabled={carregando}
-        >
-          <Text style={styles.primaryButtonText}>
-            {carregando ? 'Entrando...' : 'Entrar'}
-          </Text>
-        </Pressable>
+          <Text style={styles.label}>Senha</Text>
+          <TextInput
+            style={styles.input}
+            value={senha}
+            onChangeText={setSenha}
+            placeholder="Digite sua senha"
+            placeholderTextColor="#8A94A6"
+            secureTextEntry
+          />
 
-        <Pressable onPress={() => navigation.navigate('Cadastro')}>
-          <Text style={styles.link}>Ainda não tem conta? Cadastre-se</Text>
-        </Pressable>
-      </View>
+          <Pressable
+            style={[
+              styles.primaryButton,
+              carregando && styles.primaryButtonDisabled,
+            ]}
+            onPress={entrar}
+            disabled={carregando}
+          >
+            <Text style={styles.primaryButtonText}>
+              {carregando ? 'Entrando...' : 'Entrar'}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={() => navigation.navigate('Cadastro')}>
+            <Text style={styles.link}>Ainda não tem conta? Cadastre-se</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -95,26 +107,45 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F8FF',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#EEF5F6',
   },
-  card: {
-    padding: 24,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingVertical: 28,
+    borderRadius: 24,
+    backgroundColor: '#2670F0',
   },
   brand: {
-    marginBottom: 8,
-    color: '#1F6F78',
-    fontSize: 32,
+    color: '#FFFFFF',
+    fontSize: 34,
     fontWeight: '800',
     textAlign: 'center',
   },
+  headerText: {
+    marginTop: 6,
+    color: '#E8F0FF',
+    fontWeight: '600',
+  },
+  card: {
+    padding: 24,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 4,
+  },
   title: {
-    color: '#1F2937',
+    color: '#111827',
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '800',
     textAlign: 'center',
   },
   subtitle: {
@@ -125,39 +156,39 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 6,
-    color: '#374151',
+    color: '#111827',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   input: {
-    height: 48,
+    height: 52,
     marginBottom: 16,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    borderColor: '#CFE0FF',
+    borderRadius: 14,
+    backgroundColor: '#F8FAFF',
     color: '#111827',
   },
   primaryButton: {
     alignItems: 'center',
     marginTop: 4,
     paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: '#1F6F78',
+    borderRadius: 14,
+    backgroundColor: '#2670F0',
   },
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   primaryButtonDisabled: {
     opacity: 0.6,
   },
   link: {
     marginTop: 20,
-    color: '#1F6F78',
-    fontWeight: '600',
+    color: '#1D4ED8',
+    fontWeight: '700',
     textAlign: 'center',
   },
 });

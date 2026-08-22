@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -71,52 +72,60 @@ export default function TrocarSenhaScreen({ navigation }) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Trocar senha</Text>
-        <Text style={styles.subtitle}>Informe sua senha atual e a nova.</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
+          <Text style={styles.title}>Trocar senha</Text>
+          <Text style={styles.subtitle}>Informe sua senha atual e a nova.</Text>
 
-        <Text style={styles.label}>Senha atual</Text>
-        <TextInput
-          style={styles.input}
-          value={senhaAtual}
-          onChangeText={setSenhaAtual}
-          placeholder="Digite a senha atual"
-          secureTextEntry
-        />
+          <Text style={styles.label}>Senha atual</Text>
+          <TextInput
+            style={styles.input}
+            value={senhaAtual}
+            onChangeText={setSenhaAtual}
+            placeholder="Digite a senha atual"
+            placeholderTextColor="#8A94A6"
+            secureTextEntry
+          />
 
-        <Text style={styles.label}>Nova senha</Text>
-        <TextInput
-          style={styles.input}
-          value={novaSenha}
-          onChangeText={setNovaSenha}
-          placeholder="Digite a nova senha"
-          secureTextEntry
-        />
+          <Text style={styles.label}>Nova senha</Text>
+          <TextInput
+            style={styles.input}
+            value={novaSenha}
+            onChangeText={setNovaSenha}
+            placeholder="Digite a nova senha"
+            placeholderTextColor="#8A94A6"
+            secureTextEntry
+          />
 
-        <Text style={styles.label}>Confirmar nova senha</Text>
-        <TextInput
-          style={styles.input}
-          value={confirmarNovaSenha}
-          onChangeText={setConfirmarNovaSenha}
-          placeholder="Digite a nova senha novamente"
-          secureTextEntry
-        />
+          <Text style={styles.label}>Confirmar nova senha</Text>
+          <TextInput
+            style={styles.input}
+            value={confirmarNovaSenha}
+            onChangeText={setConfirmarNovaSenha}
+            placeholder="Digite a nova senha novamente"
+            placeholderTextColor="#8A94A6"
+            secureTextEntry
+          />
 
-        <Pressable
-          style={[
-            styles.primaryButton,
-            carregando && styles.primaryButtonDisabled,
-          ]}
-          onPress={trocarSenha}
-          disabled={carregando}
-        >
-          <Text style={styles.primaryButtonText}>
-            {carregando ? 'Alterando...' : 'Alterar senha'}
-          </Text>
-        </Pressable>
-      </View>
+          <Pressable
+            style={[
+              styles.primaryButton,
+              carregando && styles.primaryButtonDisabled,
+            ]}
+            onPress={trocarSenha}
+            disabled={carregando}
+          >
+            <Text style={styles.primaryButtonText}>
+              {carregando ? 'Alterando...' : 'Alterar senha'}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -124,17 +133,25 @@ export default function TrocarSenhaScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F8FF',
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#EEF5F6',
   },
   card: {
     padding: 24,
-    borderRadius: 18,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 4,
   },
   title: {
-    color: '#1F2937',
+    color: '#111827',
     fontSize: 26,
     fontWeight: '800',
     textAlign: 'center',
@@ -147,26 +164,26 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 6,
-    color: '#374151',
+    color: '#111827',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   input: {
-    height: 48,
+    height: 52,
     marginBottom: 16,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    borderColor: '#CFE0FF',
+    borderRadius: 14,
+    backgroundColor: '#F8FAFF',
     color: '#111827',
   },
   primaryButton: {
     alignItems: 'center',
     marginTop: 4,
     paddingVertical: 14,
-    borderRadius: 10,
-    backgroundColor: '#1F6F78',
+    borderRadius: 14,
+    backgroundColor: '#2670F0',
   },
   primaryButtonDisabled: {
     opacity: 0.6,
@@ -174,7 +191,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
-

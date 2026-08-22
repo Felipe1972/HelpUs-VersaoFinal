@@ -65,7 +65,7 @@ export default function UsuariosScreen({ navigation }) {
   if (carregando) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#1F6F78" />
+        <ActivityIndicator size="large" color="#2670F0" />
         <Text style={styles.feedback}>Carregando usuários...</Text>
       </View>
     );
@@ -103,7 +103,7 @@ export default function UsuariosScreen({ navigation }) {
 const styles = StyleSheet.create({
   list: {
     padding: 16,
-    backgroundColor: '#EEF5F6',
+    backgroundColor: '#F5F8FF',
   },
   emptyList: {
     flexGrow: 1,
@@ -113,13 +113,18 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
     padding: 18,
-    borderRadius: 14,
+    borderRadius: 18,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 2,
   },
   name: {
-    color: '#1F2937',
+    color: '#111827',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   detail: {
     marginTop: 5,
@@ -138,10 +143,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#DDEFF1',
-    color: '#1F6F78',
+    backgroundColor: '#E8F0FF',
+    color: '#1D4ED8',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     textTransform: 'capitalize',
   },
   centered: {
@@ -149,7 +154,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#EEF5F6',
+    backgroundColor: '#F5F8FF',
   },
   feedback: {
     marginTop: 12,
@@ -160,12 +165,11 @@ const styles = StyleSheet.create({
     marginTop: 18,
     paddingHorizontal: 18,
     paddingVertical: 11,
-    borderRadius: 10,
-    backgroundColor: '#1F6F78',
+    borderRadius: 14,
+    backgroundColor: '#2670F0',
   },
   retryButtonText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
-

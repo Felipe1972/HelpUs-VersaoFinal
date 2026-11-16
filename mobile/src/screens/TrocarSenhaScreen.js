@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import api from '../services/api';
+import { Screen } from '../components/UI';
 import { limparSessao } from '../services/authStorage';
 
 export default function TrocarSenhaScreen({ navigation }) {
@@ -70,14 +71,7 @@ export default function TrocarSenhaScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+    <Screen title="Trocar senha" navigation={navigation} back active="Perfil">
         <View style={styles.card}>
           <Text style={styles.title}>Trocar senha</Text>
           <Text style={styles.subtitle}>Informe sua senha atual e a nova.</Text>
@@ -125,8 +119,7 @@ export default function TrocarSenhaScreen({ navigation }) {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
@@ -174,7 +167,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: '#CFE0FF',
-    borderRadius: 14,
+    borderRadius: 24,
     backgroundColor: '#F8FAFF',
     color: '#111827',
   },
@@ -182,8 +175,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
     paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#2670F0',
+    borderRadius: 24,
+    backgroundColor: '#2876E7',
   },
   primaryButtonDisabled: {
     opacity: 0.6,

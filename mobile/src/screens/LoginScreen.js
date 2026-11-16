@@ -12,8 +12,11 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { salvarSessao } from '../services/authStorage';
+import { Header } from '../components/UI';
+import { useDemo } from '../context/DemoContext';
 
 export default function LoginScreen({ navigation }) {
+  const { resetDemo } = useDemo();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
@@ -26,10 +29,11 @@ export default function LoginScreen({ navigation }) {
       const { token, usuario } = response.data;
 
       await salvarSessao(token, usuario);
+      resetDemo();
 
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Perfil', params: { usuario } }],
+        routes: [{ name: 'Home' }],
       });
     } catch (error) {
       const mensagem =
@@ -43,6 +47,8 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
+    <View style={styles.container}>
+    <Header title="Help Us" navigation={navigation} auth />
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -51,11 +57,6 @@ export default function LoginScreen({ navigation }) {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.header}>
-          <Text style={styles.brand}>Help Us</Text>
-          <Text style={styles.headerText}>Cuidado, apoio e segurança.</Text>
-        </View>
-
         <View style={styles.card}>
           <Text style={styles.title}>Login</Text>
           <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
@@ -95,24 +96,29 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </Pressable>
 
-          <Pressable onPress={() => navigation.navigate('Cadastro')}>
-            <Text style={styles.link}>Ainda não tem conta? Cadastre-se</Text>
+          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('RecuperarSenha')}>
+            <Text style={styles.link}>Esqueci a senha</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Cadastro')}>
+            <Text style={styles.link}>Não tenho conta</Text>
           </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F8FF',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     padding: 24,
+    paddingTop: 40,
   },
   header: {
     alignItems: 'center',
@@ -164,18 +170,16 @@ const styles = StyleSheet.create({
     height: 52,
     marginBottom: 16,
     paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#CFE0FF',
-    borderRadius: 14,
-    backgroundColor: '#F8FAFF',
+    borderRadius: 24,
+    backgroundColor: '#EFF2F6',
     color: '#111827',
   },
   primaryButton: {
     alignItems: 'center',
     marginTop: 4,
     paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#2670F0',
+    borderRadius: 28,
+    backgroundColor: '#2876E7',
   },
   primaryButtonText: {
     color: '#FFFFFF',
@@ -186,6 +190,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   link: {
+    minHeight: 44,
+    paddingVertical: 12,
     marginTop: 20,
     color: '#1D4ED8',
     fontWeight: '700',

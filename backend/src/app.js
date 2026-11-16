@@ -2,12 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./config/database');
 const usuarioRoutes = require('./routes/usuarioRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use('/usuarios', usuarioRoutes);
+app.use(chatRoutes);
+app.use(require('./routes/ocorrenciaRoutes'));
 
 app.get('/status', (request, response) => {
   return response.status(200).json({

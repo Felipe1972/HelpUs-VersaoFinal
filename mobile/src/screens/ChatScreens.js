@@ -1,0 +1,84 @@
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Screen, Card, Button, ListRow, IconButton, ui, colors } from '../components/UI';
+import api from '../services/api';
+import { limparSessao } from '../services/authStorage';
+import useChat from '../hooks/useChat';
+
+export function ConversasScreen({ navigation }) {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    const abort = new AbortController();
+    setLoading(true); setError('');
+    api.get('/conversas', { signal: abort.signal }).then(({ data }) => {
+      if (active) setConversations(data.conversas);
+    }).catch(async failure => {
+      if (!active) return;
+      if (failure.response?.status === 401) {
+        await limparSessao();
+        if (active) navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      } else {
+        setConversations([]);
+        setError(failure.response?.data?.mensagem || 'Não foi possível carregar suas conversas.');
+      }
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; abort.abort(); };
+  }, [navigation, attempt]));
+  return <Screen title="Conversas" navigation={navigation} active="Conversas">
+    <Text style={ui.section}>SUA COMUNIDADE</Text>
+    {loading && <ActivityIndicator color={colors.blue} accessibilityLabel="Carregando conversas" />}
+    {error ? <Card><Text style={ui.subtitle}>{error}</Text><Button style={{ marginTop: 12 }} title="Tentar novamente" onPress={() => setAttempt(value => value + 1)} /></Card> : conversations.map(conversation =>
+      <ListRow key={conversation.id_ocorrencia + '-' + conversation.interlocutor.id_usuario} icon="person-outline"
+        title={conversation.interlocutor.nome}
+        subtitle={conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
+        onPress={() => navigation.navigate('Chat', { id_ocorrencia: conversation.id_ocorrencia, id_interlocutor: conversation.interlocutor.id_usuario, nome: conversation.interlocutor.nome })} />)}
+    {!loading && !error && !conversations.length && <Card><Text style={[ui.title, { fontSize: 20, marginBottom: 8 }]}>Suas conversas aparecerão aqui</Text><Text style={ui.subtitle}>Quando houver um atendimento aceito, você poderá conversar com a outra pessoa sobre o pedido de ajuda.</Text></Card>}
+  </Screen>;
+}
+
+export function ChatScreen({ navigation, route }) {
+  const chat = useChat(navigation, route?.params?.id_ocorrencia, route?.params?.id_interlocutor);
+  const scroll = useRef(null);
+  const scrollToBottom = useRef(true);
+  const previousLast = useRef(null);
+  const last = chat.messages[chat.messages.length - 1]?.id_mensagem;
+  if (last !== previousLast.current) { previousLast.current = last; scrollToBottom.current = true; }
+  const readOnly = chat.conversation?.somente_leitura;
+  return <Screen title={chat.conversation?.interlocutor.nome || route?.params?.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
+    <View style={{ padding: 14, gap: 6 }}>
+      <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? 'Conversa encerrada · somente leitura' : chat.status}</Text>
+      {!!chat.error && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { fontSize: 12, textAlign: 'center' }]}>{chat.error}</Text>}
+      {(chat.error || ['Desconectado', 'Erro de conexão'].includes(chat.status)) && <Button title="Tentar novamente" tone="soft" onPress={chat.retry} />}
+    </View>
+    <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={s.messages}
+      onContentSizeChange={() => { if (scrollToBottom.current) { scroll.current?.scrollToEnd({ animated: true }); scrollToBottom.current = false; } }}>
+      {chat.cursor && <Button title="Carregar anteriores" tone="soft" disabled={chat.loading} onPress={() => { scrollToBottom.current = false; chat.loadOlder(); }} />}
+      <Text style={s.day}>{chat.conversation?.titulo || 'CONVERSA'}</Text>
+      {!chat.loading && !chat.messages.length && !chat.error && <Text style={ui.subtitle}>Ainda não há mensagens nesta conversa.</Text>}
+      {chat.messages.map(message => {
+        const mine = message.id_remetente === chat.userId;
+        return <View key={message.id_mensagem} style={[s.bubble, mine && s.mine]}>
+          <Text style={[s.text, mine && { color: 'white' }]}>{message.texto}</Text>
+          <Text style={[s.caption, mine && { color: '#DBEAFE' }]}>{mine ? 'Você' : chat.conversation?.interlocutor.nome} · {message.enviada_em ? new Date(message.enviada_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</Text>
+        </View>;
+      })}
+    </ScrollView>
+    <View style={s.composer}><TextInput accessibilityLabel="Mensagem" style={[ui.input, { flex: 1, maxHeight: 120 }]} placeholder={readOnly ? 'Conversa encerrada' : 'Escreva uma mensagem…'} placeholderTextColor={colors.muted} value={chat.draft} onChangeText={chat.setDraft} editable={!readOnly && !chat.sending} multiline maxLength={1000} />
+      <IconButton name="send" label={chat.sending ? 'Enviando mensagem' : 'Enviar mensagem'} disabled={chat.status !== 'Conectado' || chat.loading || !chat.conversation || readOnly || chat.sending || !chat.draft.trim()} onPress={chat.send} />
+    </View>
+  </Screen>;
+}
+const s = StyleSheet.create({
+  messages: { padding: 24, gap: 18, flexGrow: 1 },
+  day: { alignSelf: 'center', fontSize: 11, letterSpacing: 1, color: colors.muted, marginBottom: 10 },
+  bubble: { maxWidth: '88%', padding: 16, borderRadius: 20, borderBottomLeftRadius: 5, backgroundColor: '#EFF3F9', alignSelf: 'flex-start', gap: 8 },
+  mine: { alignSelf: 'flex-end', borderBottomLeftRadius: 20, borderBottomRightRadius: 5, backgroundColor: colors.blue },
+  text: { color: colors.ink, fontSize: 16, lineHeight: 24 },
+  caption: { fontSize: 10, color: colors.muted },
+  composer: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderTopWidth: 1, borderColor: colors.line },
+});

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { limparSessao } from '../services/authStorage';
+import { Screen } from '../components/UI';
 
 export default function UsuariosScreen({ navigation }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -64,26 +65,26 @@ export default function UsuariosScreen({ navigation }) {
 
   if (carregando) {
     return (
-      <View style={styles.centered}>
+      <Screen title="Usuários" navigation={navigation} back active="Perfil" scroll={false}><View style={styles.centered}>
         <ActivityIndicator size="large" color="#2670F0" />
         <Text style={styles.feedback}>Carregando usuários...</Text>
-      </View>
+      </View></Screen>
     );
   }
 
   if (erro) {
     return (
-      <View style={styles.centered}>
+      <Screen title="Usuários" navigation={navigation} back active="Perfil" scroll={false}><View style={styles.centered}>
         <Text style={styles.feedback}>{erro}</Text>
         <Pressable style={styles.retryButton} onPress={carregarUsuarios}>
           <Text style={styles.retryButtonText}>Tentar novamente</Text>
         </Pressable>
-      </View>
+      </View></Screen>
     );
   }
 
   return (
-    <FlatList
+    <Screen title="Usuários" navigation={navigation} back active="Perfil" scroll={false}><FlatList
       data={usuarios}
       keyExtractor={(item) => String(item.id_usuario)}
       renderItem={renderizarUsuario}
@@ -96,7 +97,7 @@ export default function UsuariosScreen({ navigation }) {
       }
       refreshing={carregando}
       onRefresh={carregarUsuarios}
-    />
+    /></Screen>
   );
 }
 

@@ -82,8 +82,8 @@ async function listarUsuarios() {
 
 async function criarUsuario({ nome, email, senhaHash, telefone, ehVoluntario }) {
   const [resultado] = await pool.execute(
-    `INSERT INTO usuario (nome, email, senha_hash, telefone, eh_voluntario)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO usuario (nome, email, senha_hash, telefone, eh_voluntario, tipo_usuario)
+     VALUES (?, ?, ?, ?, ?, 'solicitante')`,
     [nome, email, senhaHash, telefone, ehVoluntario],
   );
 

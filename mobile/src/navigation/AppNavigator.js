@@ -5,17 +5,22 @@ import CadastroScreen from '../screens/CadastroScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import UsuariosScreen from '../screens/UsuariosScreen';
 import TrocarSenhaScreen from '../screens/TrocarSenhaScreen';
+import HomeScreen from '../screens/HomeScreen';
+import PedidosScreen from '../screens/PedidosScreen';
+import { DemoProvider } from '../context/DemoContext';
+import { ConversasScreen, ChatScreen } from '../screens/ChatScreens';
+import { NotificacoesScreen, AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, FavoritosScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
+    <DemoProvider><NavigationContainer>
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#2670F0',
+            backgroundColor: '#2876E7',
           },
           headerTintColor: '#FFFFFF',
           headerTitleStyle: {
@@ -34,7 +39,12 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Cadastro"
           component={CadastroScreen}
-          options={{ title: 'Cadastro', headerBackTitle: 'Login' }}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Perfil"
@@ -44,14 +54,15 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Usuarios"
           component={UsuariosScreen}
-          options={{ title: 'Usuários' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="TrocarSenha"
           component={TrocarSenhaScreen}
-          options={{ title: 'Trocar senha' }}
+          options={{ headerShown: false }}
         />
+        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Notificacoes: NotificacoesScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, Favoritos: FavoritosScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
-    </NavigationContainer>
+    </NavigationContainer></DemoProvider>
   );
 }

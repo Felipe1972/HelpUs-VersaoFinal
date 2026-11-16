@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import api from '../services/api';
+import { Screen } from '../components/UI';
 
 export default function CadastroScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -49,14 +50,7 @@ export default function CadastroScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+    <Screen title="Cadastro" navigation={navigation} back auth>
         <Text style={styles.title}>Criar conta</Text>
         <Text style={styles.subtitle}>Preencha seus dados para começar.</Text>
 
@@ -119,7 +113,7 @@ export default function CadastroScreen({ navigation }) {
               value={ehVoluntario}
               onValueChange={setEhVoluntario}
               trackColor={{ false: '#CBD5E1', true: '#A7C5FF' }}
-              thumbColor={ehVoluntario ? '#2670F0' : '#F8FAFC'}
+              thumbColor={ehVoluntario ? '#2876E7' : '#F8FAFC'}
             />
           </View>
 
@@ -140,8 +134,7 @@ export default function CadastroScreen({ navigation }) {
             <Text style={styles.link}>Já tem uma conta? Voltar ao login</Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
@@ -189,7 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: '#CFE0FF',
-    borderRadius: 14,
+    borderRadius: 24,
     backgroundColor: '#F8FAFF',
     color: '#111827',
   },
@@ -211,8 +204,8 @@ const styles = StyleSheet.create({
   primaryButton: {
     alignItems: 'center',
     paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: '#2670F0',
+    borderRadius: 24,
+    backgroundColor: '#2876E7',
   },
   primaryButtonText: {
     color: '#FFFFFF',

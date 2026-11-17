@@ -1,3 +1,4 @@
+import { statusLabel } from '../services/statusLabels';
 import usePollingRefresh from '../hooks/usePollingRefresh';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,7 +8,7 @@ import api from '../services/api';
 import { limparSessao } from '../services/authStorage';
 import useChat from '../hooks/useChat';
 
-export function ConversasScreen({ navigation }) {
+export function ConversasScreen({ navigation, route }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,12 +33,12 @@ export function ConversasScreen({ navigation }) {
     return () => { active = false; abort.abort(); };
   }, [navigation, attempt]));
   return <Screen title="Conversas" navigation={navigation} active="Conversas">
-    <Text style={ui.section}>SUA COMUNIDADE</Text>
+    <Text style={ui.section}>{route?.params?.id_ocorrencia?'CONVERSAS DO PEDIDO #'+route.params.id_ocorrencia:'SUA COMUNIDADE'}</Text>{route?.params?.id_ocorrencia&&<Button title="Ver todas as conversas" tone="soft" onPress={()=>navigation.setParams({id_ocorrencia:undefined})}/>}
     {loading && <ActivityIndicator color={colors.blue} accessibilityLabel="Carregando conversas" />}
-    {error ? <Card><Text style={ui.subtitle}>{error}</Text><Button style={{ marginTop: 12 }} title="Tentar novamente" onPress={() => setAttempt(value => value + 1)} /></Card> : conversations.map(conversation =>
+    {error ? <Card><Text style={ui.subtitle}>{error}</Text><Button style={{ marginTop: 12 }} title="Tentar novamente" onPress={() => setAttempt(value => value + 1)} /></Card> : conversations.filter(c=>!route?.params?.id_ocorrencia||c.id_ocorrencia===route.params.id_ocorrencia).map(conversation =>
       <ListRow key={conversation.id_conversa} icon="person-outline"
         title={conversation.interlocutor.nome}
-        subtitle={'Pedido #'+conversation.id_ocorrencia+' · '+conversation.status+' · '+conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
+        subtitle={'Pedido #'+conversation.id_ocorrencia+' · '+statusLabel(conversation.status)+' · '+conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
         onPress={() => navigation.navigate('Chat', { id_conversa: conversation.id_conversa })} />)}
     {!loading && !error && !conversations.length && <Card><Text style={[ui.title, { fontSize: 20, marginBottom: 8 }]}>Suas conversas aparecerão aqui</Text><Text style={ui.subtitle}>Voluntários podem iniciar contato nos pedidos disponíveis. As conversas aparecerão aqui.</Text></Card>}
   </Screen>;
@@ -54,7 +55,7 @@ export function ChatScreen({ navigation, route }) {
   return <Screen title={chat.conversation?.interlocutor.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
     <View style={{ padding: 14, gap: 6 }}>{chat.conversation?.id_ocorrencia&&<Button title={'Pedido #'+chat.conversation.id_ocorrencia+' · Acompanhar'} tone="soft" onPress={()=>navigation.navigate('Acompanhamento',{id_ocorrencia:chat.conversation.id_ocorrencia})}/>}
       <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? chat.conversation?.motivo_somente_leitura || 'Conversa encerrada · somente leitura' : chat.status}</Text>
-      {chat.conversation?.status&&<Text style={ui.subtitle}>Status do pedido: {chat.conversation.status.replaceAll('_',' ')}</Text>}
+      {chat.conversation?.status&&<Text style={ui.subtitle}>Status do pedido: {statusLabel(chat.conversation.status)}</Text>}
       {!!chat.error && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { fontSize: 12, textAlign: 'center' }]}>{chat.error}</Text>}
       {(chat.error || ['Desconectado', 'Erro de conexão'].includes(chat.status)) && <Button title="Tentar novamente" tone="soft" onPress={chat.retry} />}
     </View>

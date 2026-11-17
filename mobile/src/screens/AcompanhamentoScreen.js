@@ -1,3 +1,4 @@
+import { statusLabel } from '../services/statusLabels';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { obtainLocation } from '../services/pedidoLocation';
@@ -16,11 +17,12 @@ export default function AcompanhamentoScreen({ navigation, route }) {
   const [nota,setNota]=useState(0),[comment,setComment]=useState('');const lock=useRef(false);
   const [position,setPosition]=useState(null);const map=useRef(null);
   useEffect(()=>{let alive=true;obtainLocation(Location).then(p=>{if(alive)setPosition(p)}).catch(()=>{});return()=>{alive=false}},[]);
+  useFocusEffect(useCallback(()=>()=>setItem(null),[id]));
   usePollingRefresh(setTick);
   useFocusEffect(useCallback(()=>{
     const abort=new AbortController();
     api.get('/ocorrencias/'+id,{signal:abort.signal}).then(({data})=>{if(!abort.signal.aborted){setItem(data.ocorrencia);setError('')}}).catch(async e=>{if(!abort.signal.aborted){setItem(null);if(!await sessionError(e,navigation))setError(e.response?.data?.mensagem||'Não foi possível confirmar o estado atual. Atualize para continuar.')}});
-    return()=>{abort.abort();setItem(null)};
+    return()=>{abort.abort()};
   },[id,tick,navigation]));
   async function act(kind,body={}){
     if(lock.current)return;lock.current=true;setBusy(true);
@@ -33,7 +35,7 @@ export default function AcompanhamentoScreen({ navigation, route }) {
     {!!error&&<Text accessibilityLiveRegion="polite" style={ui.subtitle}>{error}</Text>}
     {!item&&!error&&<ActivityIndicator/>}
     {item&&<>
-      <Card style={{gap:12}}><Text style={ui.title}>{item.titulo}</Text><Text style={ui.label}>{item.status.replaceAll('_',' ')} · {urgencyLabels[item.nivel_urgencia]}</Text><Text style={ui.subtitle}>{item.descricao_publica}</Text><Text style={ui.subtitle}>{item.modalidade_horario==='agendado'?'Agendado':'Horário solicitado'}: {item.necessaria_em?new Date(item.necessaria_em).toLocaleString('pt-BR'):'Não informado'} (horário deste aparelho)</Text>
+      <Card style={{gap:12}}><Text style={ui.title}>{item.titulo}</Text><Text style={ui.label}>{statusLabel(item.status)} · {urgencyLabels[item.nivel_urgencia]}</Text><Text style={ui.subtitle}>{item.descricao_publica}</Text><Text style={ui.subtitle}>{item.modalidade_horario==='agendado'?'Agendado':'Horário solicitado'}: {item.necessaria_em?new Date(item.necessaria_em).toLocaleString('pt-BR'):'Não informado'} (horário deste aparelho)</Text>
         {a?.responsavel&&<Text style={ui.label}>Responsável: {a.responsavel}</Text>}
         {a?.reputacao&&<Text style={ui.subtitle}>{a.reputacao.media.toFixed(1)} / 5 · {a.reputacao.quantidade} avaliação(ões)</Text>}
         {a?.ambiguo&&<Text style={ui.subtitle}>Este pedido antigo possui vínculos simultâneos. O histórico foi preservado; novas liberações de localização estão bloqueadas.</Text>}

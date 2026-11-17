@@ -1,3 +1,4 @@
+import { statusLabel } from '../services/statusLabels';
 import { obtainLocation } from '../services/pedidoLocation';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { pendingPedidoId, clearPedidoRefresh } from '../services/pedidoRefresh';
@@ -87,7 +88,7 @@ export default function HomeScreen({ navigation }) {
         {['assumidos','recusados'].includes(escopo)&&<Button title={escopo==='recusados'?'Voltar aos atendimentos':'Ver chamados recusados'} tone="soft" onPress={()=>setEscopo(escopo==='recusados'?'assumidos':'recusados')}/>}
         {escopo==='assumidos'&&<Button title="Histórico de atendimentos" tone="soft" onPress={()=>navigation.navigate('MeusPedidos',{escopo:'assumidos'})}/>}
         {!pedidos.length&&!loading&&<Text style={styles.noticeText}>{escopo==='meus'?'Você ainda não criou pedidos de ajuda.':escopo==='recusados'?'Nenhum chamado recusado.':'Você ainda não possui atendimentos.'}</Text>}
-        {pedidos.map(p=><Pressable key={p.id_ocorrencia} accessibilityRole="button" style={styles.orderRow} onPress={()=>navigation.navigate(p.acompanhamento?.pode_acompanhar?'Acompanhamento':'OcorrenciaDetalhes',{id_ocorrencia:p.id_ocorrencia})}><Text style={{fontWeight:'700',fontSize:16}}>{p.titulo}</Text><Text style={{color:colors.muted}}>{p.meu_pedido?'Seu pedido':'Atendimento'} · {p.status.replaceAll('_',' ')} · {urgencyLabels[p.nivel_urgencia]}</Text><Text style={{color:colors.muted}}>{p.necessaria_em?new Date(p.necessaria_em).toLocaleString('pt-BR'):'Horário não informado'}</Text><Text style={{color:colors.blue}}>Abrir pedido →</Text></Pressable>)}
+        {pedidos.map(p=><Pressable key={p.id_ocorrencia} accessibilityRole="button" style={styles.orderRow} onPress={()=>navigation.navigate(p.acompanhamento?.pode_acompanhar?'Acompanhamento':'OcorrenciaDetalhes',{id_ocorrencia:p.id_ocorrencia})}><Text style={{fontWeight:'700',fontSize:16}}>{p.titulo}</Text><Text style={{color:colors.muted}}>{p.meu_pedido?'Seu pedido':'Atendimento'} · {statusLabel(p.status)} · {urgencyLabels[p.nivel_urgencia]}</Text><Text style={{color:colors.muted}}>{p.necessaria_em?new Date(p.necessaria_em).toLocaleString('pt-BR'):'Horário não informado'}</Text><Text style={{color:colors.blue}}>Abrir pedido →</Text></Pressable>)}
         <Button title="Atualizar lista" tone="soft" disabled={loading} onPress={()=>setAttempt(v=>v+1)}/>
       </ScrollView>}
     </View>

@@ -10,3 +10,7 @@ Pasta exclusiva: Desktop/HelpUsTeste. SDK 58, Node portátil do mobile e help_us
 6. Entrega: RELATORIO-FINAL-HELPUS.md e CHECKLIST-TESTES-FINAIS.md; commits locais por etapa validada.
 
 Decisões: aceite não implica consentimento; localização precisa exige compartilhamento explícito e vínculo ativo único. Desistência reabre pedidos futuros/sem horário, mas pedidos com horário passado aguardam decisão do dono. Conclusão pode ser confirmada diretamente pelo dono; voluntário somente solicita. Conversa de vínculo desistente permanece histórica. Dados previamente vistos não podem ser apagados da memória ou capturas do destinatário.
+
+## Checkpoint concluído
+
+Migração finalizacao.sql já aplicada; não reaplicar. Ciclo completo, Home, endereço e avisos implementados. Integrações reais passaram; Expo Doctor 20/20 e bundles Android/iOS aprovados. API da pasta Desktop reiniciada em 3000 e testada via LAN. 128 registros anteriores preservados. Ver RELATORIO-FINAL-HELPUS.md para limitações e CHECKLIST-TESTES-FINAIS.md para validação física pendente. Commits 7db0621, cde6f60 e 8e727f6, além do checkpoint documental final. Sem push.

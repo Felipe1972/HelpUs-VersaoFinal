@@ -2,7 +2,7 @@
 
 Status: **pendente nos dois aparelhos**. Marcar separadamente por aparelho. Usar o projeto Desktop/HelpUsTeste, QR novo, SDK 58, mesma rede e API /status = helpus-finalizacao-v1. Não reaplicar SQL.
 
-Abra `backend/.final-test.local.json` no editor. Copie email e senha para o login do app; não use `cd` no arquivo. Solicitante = 47; Voluntario_A = 48; Voluntario_B = 49; Terceiro = 50. O arquivo contém a senha local e não deve ser publicado. O pedido 53 está disponível para iniciar a demonstração; se seu horário passar, crie outro pedido identificado “TESTE MANUAL”.
+Abra `backend/.final-test.local.json` no editor. Copie email e senha para o login do app; não use `cd` no arquivo. Solicitante = 51; Voluntario_A = 52; Voluntario_B = 53; Terceiro = 54. O arquivo contém a senha local e não deve ser publicado. O pedido 60 está disponível para iniciar a demonstração; se seu horário passar, crie outro pedido identificado “TESTE MANUAL”.
 
 1. [ ] Login como Solicitante. Home mostra somente pedidos próprios; nenhum botão de oportunidades. Menu, perfil, endereço, avisos e chat abrem. Logout e login como voluntário mostram Disponíveis / Atend. / Pedidos, sem dados da sessão anterior.
 2. [ ] Conceder GPS. Mapa abre na posição real. Zoom/movimento permanecem durante três ciclos de 15 s, ida ao chat e retorno. Centralizar em mim funciona; nenhum salto para São Paulo. Testar segundo plano por 30 s e retorno.
@@ -21,3 +21,5 @@ Abra `backend/.final-test.local.json` no editor. Copie email e senha para o logi
 15. [ ] SOS informa que não aciona emergência; recuperação por email não promete envio. Sem favoritos/corações. Não interpretar demonstrações sinalizadas como funções reais.
 
 Registrar aparelho, versão do Expo Go, horário, ação, resultado e captura se houver falha. Testar o ciclo com dois aparelhos ao mesmo tempo; alternar contas num único telefone não comprova entrega em tempo real entre dispositivos. Não apagar registros: identificar todos os dados manuais como TESTE.
+
+Verificações da auditoria: acompanhar mapa por três ciclos sem desmontagem; revogar e confirmar remoção do endereço; aviso de conversa deve abrir conversas do pedido correto e permitir Ver todas; rótulos devem ser naturais (Aguardando ajuda, Concluído, Cancelado). Em falha temporária dos avisos, a lista carregada permanece; logout deve removê-la.

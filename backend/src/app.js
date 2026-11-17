@@ -11,10 +11,11 @@ app.use(express.json());
 app.use('/usuarios', usuarioRoutes);
 app.use(chatRoutes);
 app.use(require('./routes/ocorrenciaRoutes'));
+app.use(require('./routes/acompanhamentoRoutes'));
 
 app.get('/status', (request, response) => {
   return response.status(200).json({
-    status: 'ok',
+    status: 'ok', versao: 'helpus-finalizacao-v1',
     mensagem: 'Backend Help Us funcionando',
   });
 });

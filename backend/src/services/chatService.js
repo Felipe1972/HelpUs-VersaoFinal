@@ -50,9 +50,11 @@ async function authorize(userId, occurrenceId, otherId, db = pool, lock = false)
  const volunteer=vid===userId?viewer:other,latest=c.a.find(x=>x.id_voluntario===vid);
  const accepted=latest?.status==='aceito',refused=latest?.status==='recusado'&&!latest.recusa_desfeita_em;
  const active=['aberta','em_atendimento'].includes(c.o.status);
- const writable=Number(volunteer.eh_voluntario)===1&&active&&(accepted||(!refused&&c.o.status==='aberta'&&!c.accepted.length));
+ const ended=['desistiu','cancelado','finalizado'].includes(latest?.status);
+ const writable=!ended&&!c.o.aguarda_reabertura&&Number(volunteer.eh_voluntario)===1&&active&&(accepted||(!refused&&c.o.status==='aberta'&&!c.accepted.length));
  const anonymous=userId===vid&&!(accepted&&active&&Number(volunteer.eh_voluntario)===1);
- return {id_conversa:conv.id_conversa,id_ocorrencia:occurrenceId,titulo:anonymous?'Pedido de ajuda':c.o.titulo,interlocutor:{nome:anonymous?'Anônimo':other.nome},somente_leitura:!writable};
+ const privateAccess=userId===c.o.id_solicitante||(accepted&&active&&c.accepted.length===1&&Number(volunteer.eh_voluntario)===1&&await require('./acompanhamentoService').shared(db,latest));
+ return {status:c.o.status,motivo_somente_leitura:writable?null:(c.o.status==='cancelada'?'Pedido cancelado. Histórico preservado.':c.o.status==='finalizada'?'Atendimento concluído. Histórico preservado.':ended?'Seu atendimento foi encerrado. Histórico preservado.':c.accepted.length?'Outro voluntário assumiu este pedido.':'Pedido indisponível para novas mensagens.'),id_conversa:conv.id_conversa,id_ocorrencia:occurrenceId,titulo:privateAccess?c.o.titulo:'Pedido de ajuda',interlocutor:{nome:anonymous?'Anônimo':other.nome},somente_leitura:!writable};
 }
 async function resolveConversation(userId,id,db=pool){
  if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))throw new ChatError('INVALID_ID','Conversa inválida.');
@@ -116,9 +118,11 @@ async function saveMessage(claims, event) {
     const conversation = await authorize(claims.id_usuario, occurrenceId, otherId, db, true);
     if (conversation.somente_leitura) throw new ChatError('READ_ONLY', 'Conversa encerrada. O histórico continua disponível.', 403);
     if (claims.exp * 1000 <= Date.now()) throw new ChatError('UNAUTHORIZED', 'Sessão expirada.', 401);
+    const [[previous]]=await db.execute('SELECT '+messageColumns+' FROM mensagem WHERE id_remetente=? AND request_id=?',[claims.id_usuario,event.request_id]);
+    if(previous){if(previous.id_ocorrencia!==occurrenceId||previous.id_destinatario!==otherId||previous.texto!==text)throw new ChatError('INVALID_REQUEST','Identificador já utilizado para outro envio.');await db.commit();return messageDTO(previous)}
     const [insert] = await db.execute(
-      'INSERT INTO mensagem (id_ocorrencia, id_remetente, id_destinatario, texto, enviada_em) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-      [occurrenceId, claims.id_usuario, otherId, text],
+      'INSERT INTO mensagem (id_ocorrencia, id_remetente, id_destinatario, texto, enviada_em,request_id) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP,?)',
+      [occurrenceId, claims.id_usuario, otherId, text,event.request_id],
     );
     const [rows] = await db.execute(`SELECT ${messageColumns} FROM mensagem WHERE id_mensagem = ?`, [insert.insertId]);
     await db.commit();

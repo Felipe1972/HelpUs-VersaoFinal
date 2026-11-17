@@ -9,7 +9,9 @@
     "test": "node --test tests/chat-unit.test.js tests/ocorrencias.test.js tests/permissoes.test.js",
     "test:ocorrencias": "node tests/ocorrencias-integration.js --allow-test-data",
     "test:integration": "node tests/chat-integration.js --allow-test-data",
-    "test:permissoes": "node tests/permissoes-integration.js --allow-test-data"
+    "test:permissoes": "node tests/permissoes-integration.js --allow-test-data",
+    "test:atendimento": "node tests/atendimento-integration.js --allow-test-data",
+    "test:finalizacao": "node tests/finalizacao-integration.js --allow-test-data"
   },
   "keywords": [
     "help-us",

@@ -29,7 +29,9 @@ async function buscarPorId(idUsuario) {
     return null;
   }
 
+  const [[rating]]=await pool.execute('SELECT AVG(nota) media,COUNT(*) quantidade FROM avaliacao WHERE id_avaliado=?',[idUsuario]);
   return {
+    reputacao:rating.quantidade?{media:Number(rating.media),quantidade:Number(rating.quantidade)}:null,
     ...usuario,
     eh_voluntario: Boolean(usuario.eh_voluntario),
   };

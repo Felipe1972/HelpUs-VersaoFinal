@@ -13,6 +13,7 @@ const pool=require('../src/config/database'),app=require('../src/app'),attach=re
  for(let i=0;i<4;i++){const body={nome:'TESTE_ATENDIMENTO_'+run+'_'+i,email:'atendimento.'+run+'.'+i+'@example.invalid',senha:password,confirmarSenha:password,telefone:'51999999999',eh_voluntario:i===1||i===2};const b=await req('POST','/usuarios/cadastro',null,body,201);accounts.push({id_usuario:b.usuario.id_usuario,email:body.email});save()}
  const [owner,v1,v2,stranger]=accounts;
  const body={id_tipo:1,descricao:'PRIVADO_'+run,descricao_publica:'Resumo de teste '+run,endereco_referencia:'ENDERECO_PRIVADO_'+run,nivel_urgencia:'media',latitude:-29.7654321,longitude:-51.1454321,modalidade_horario:'agora',fuso_horario:'America/Sao_Paulo'};
+ body.endereco={rua:'Rua teste',numero:'10',bairro:'Teste',cidade:'Teste',estado:'RS',sem_numero:false,latitude:body.latitude,longitude:body.longitude};
  async function create(extra={}){const b=await req('POST','/ocorrencias',owner,{...body,...extra},201);report.pedidos.push(b.ocorrencia.id_ocorrencia);save();return b.ocorrencia}
  const o=await create(),scheduled=await create({modalidade_horario:'agendado',necessaria_em:new Date(Date.now()+86400000).toISOString()});assert.equal(scheduled.modalidade_horario,'agendado');assert(new Date(scheduled.necessaria_em)>new Date());
  await req('POST','/ocorrencias',owner,{...body,modalidade_horario:'agendado',necessaria_em:'2020-01-01T00:00:00.000Z'},400);
@@ -36,6 +37,8 @@ const pool=require('../src/config/database'),app=require('../src/app'),attach=re
  const race=await Promise.all([v1,v2].map(async u=>{const r=await fetch(base+path+'/aceitar',{method:'POST',headers:{Authorization:'Bearer '+jwt.sign({id_usuario:u.id_usuario},process.env.JWT_SECRET,{expiresIn:'5m'})}});return {user:u,status:r.status,body:await r.json()}}));assert.deepEqual(race.map(x=>x.status).sort(),[200,409]);
  const winner=race.find(x=>x.status===200).user,loser=race.find(x=>x.status===409).user;
  assert.equal((await pool.query("SELECT COUNT(*) n FROM atendimento WHERE id_ocorrencia=? AND status='aceito'",[o.id_ocorrencia]))[0][0].n,1);
+ assert.notEqual((await req('GET',path,winner)).ocorrencia.latitude,body.latitude);
+ const aid=(await req('GET',path,owner)).ocorrencia.acompanhamento.id_atendimento;await req('POST',path+'/compartilhar',owner,{id_atendimento:aid});
  assert.equal((await req('GET',path,winner)).ocorrencia.latitude,body.latitude);
  const lc=loser===v1?c1:c2,wc=winner===v1?c1:c2;
  assert.equal((await req('GET','/conversas/'+lc.id_conversa+'/mensagens',loser)).conversa.somente_leitura,true);

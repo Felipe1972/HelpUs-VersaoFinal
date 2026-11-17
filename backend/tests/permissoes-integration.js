@@ -48,7 +48,7 @@ async function run() {
     }
     const [a, volunteer, third] = accounts; b = volunteer; c = third;
     const types = await request('GET', '/tipos-ocorrencia', a.token); assert.equal(types.status, 200);
-    const body = { id_tipo: types.data.tipos[0].id_tipo, descricao: `PRIVADO_${runId} endereço na descrição`, endereco_referencia: `PRIVADO_${runId} Rua Teste, 123`, nivel_urgencia: 'media', latitude: -29.99912345, longitude: -51.00123456 };
+    const body = {descricao_publica:'Resumo público de teste',modalidade_horario:'agora',fuso_horario:'America/Sao_Paulo',endereco:{rua:'Rua teste',numero:'10',bairro:'Centro',cidade:'Teste',estado:'RS',sem_numero:false,latitude:-29.99912345,longitude:-51.00123456}, id_tipo: types.data.tipos[0].id_tipo, descricao: `PRIVADO_${runId} endereço na descrição`, endereco_referencia: `PRIVADO_${runId} Rua Teste, 123`, nivel_urgencia: 'media', latitude: -29.99912345, longitude: -51.00123456 };
     async function create(owner) { const r = await request('POST', '/ocorrencias', owner.token, body); assert.equal(r.status, 201, JSON.stringify(r.data)); report.ocorrencias.push(r.data.ocorrencia.id_ocorrencia); save(); return r.data.ocorrencia; }
     const ownA = await create(a), ownB = await create(b), ownC = await create(c), closedA = await create(a);
     await pool.execute("UPDATE ocorrencia SET status='finalizada',latitude=NULL,longitude=NULL WHERE id_ocorrencia=? AND id_solicitante=?", [closedA.id_ocorrencia, a.id_usuario]);
@@ -104,7 +104,7 @@ async function run() {
     const history = await request('GET',`/mensagens/ocorrencia/${fixture.ocorrencia_principal}?id_interlocutor=${existing[1].usuario.id_usuario}`,existing[0].token);
     assert.equal(history.status,200); assert(Array.isArray(history.data.mensagens));
     const allowed = await request('GET',`/ocorrencias/${fixture.ocorrencia_principal}`,existing[1].token);
-    assert.equal(allowed.status,200); assert.equal(allowed.data.ocorrencia.endereco_disponivel,true);
+    assert.equal(allowed.status,200); assert.equal(allowed.data.ocorrencia.endereco_disponivel,false);
     assert.equal((await request('GET',`/mensagens/ocorrencia/${fixture.ocorrencia_principal}?id_interlocutor=${existing[1].usuario.id_usuario}`,c.token)).status,403);
     await new Promise((resolve,reject)=>{
       const socket = new WebSocket(base.replace('http','ws')+'/ws/chat'); sockets.push(socket);
@@ -112,7 +112,7 @@ async function run() {
       socket.on('error',reject); socket.on('open',()=>socket.send(JSON.stringify({type:'auth',token:existing[0].token})));
       socket.on('message',raw=>{const event=JSON.parse(raw);if(event.type==='auth_ok'){clearTimeout(timer);socket.close();resolve()}else if(event.type==='auth_error'){clearTimeout(timer);reject(Error('Auth rejeitada'))}});
     });
-    report.testes.push('Chat: auth WebSocket, histórico real anterior e isolamento de terceiro; atendimento já aceito libera detalhes privados para seu voluntário');
+    report.testes.push('Chat: auth WebSocket, histórico real anterior e isolamento de terceiro; atendimento legado sem consentimento não libera dados privados');
   } finally {
     // Apenas restaurar flags das contas criadas nesta execução; nunca excluir dados.
     if (b) await pool.execute('UPDATE usuario SET eh_voluntario=1 WHERE id_usuario=?', [b.id_usuario]);

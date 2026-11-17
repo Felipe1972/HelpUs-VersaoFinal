@@ -20,7 +20,7 @@ async function run() {
     const token = login.data.token, uid = login.data.usuario.id_usuario;
     const config = await request('GET', '/tipos-ocorrencia', token); assert.equal(config.status, 200); assert.deepEqual(config.data.urgencias, ['baixa','media','alta']);
     assert.equal(config.data.tipos.length, 5);
-    const body = { id_tipo: config.data.tipos[0].id_tipo, descricao: `Teste ocorrência ${Date.now()} — criação pela API`, endereco_referencia: ' Portão azul — teste de referência ', nivel_urgencia: 'media', latitude: -29.99912345, longitude: -51.00123456 };
+    const body = {descricao_publica:'Resumo público de teste',modalidade_horario:'agora',fuso_horario:'America/Sao_Paulo',endereco:{rua:'Rua teste',numero:'10',bairro:'Centro',cidade:'Teste',estado:'RS',sem_numero:false,latitude:-29.99912345,longitude:-51.00123456}, id_tipo: config.data.tipos[0].id_tipo, descricao: `Teste ocorrência ${Date.now()} — criação pela API`, endereco_referencia: ' Portão azul — teste de referência ', nivel_urgencia: 'media', latitude: -29.99912345, longitude: -51.00123456 };
     assert.equal((await request('POST', '/ocorrencias', null, body)).status, 401);
     const expired = jwt.sign({ id_usuario: uid }, process.env.JWT_SECRET, { expiresIn: -1 });
     assert.equal((await request('POST', '/ocorrencias', expired, body)).status, 401);

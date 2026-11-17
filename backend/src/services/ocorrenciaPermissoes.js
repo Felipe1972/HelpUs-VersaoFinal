@@ -3,10 +3,10 @@ const ativos = ['aberta', 'em_atendimento'];
 const voluntario = user => Number(user.eh_voluntario) === 1;
 const proprio = (user, row) => Number(row.id_solicitante) === Number(user.id_usuario);
 function podeConsultar(user, row) {
-  return proprio(user, row) || (voluntario(user) && (ativos.includes(row.status) || ['aceito', 'finalizado'].includes(row.atendimento_status)));
+  return proprio(user, row) || (voluntario(user) && (ativos.includes(row.status) || ['aceito', 'finalizado', 'desistiu', 'cancelado'].includes(row.atendimento_status)));
 }
 function podeVerPrivado(user, row) {
-  return proprio(user, row) || (voluntario(user) && row.atendimento_status === 'aceito' && ativos.includes(row.status));
+  return proprio(user, row) || (voluntario(user) && row.privado_autorizado === true && row.atendimento_status === 'aceito' && ativos.includes(row.status));
 }
 function elegivelParaAceitar(user, row) {
   return voluntario(user) && !proprio(user, row) && row.status === 'aberta';

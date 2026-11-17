@@ -22,7 +22,8 @@ test('projeção pública não vaza texto livre, identidade, endereço nem coord
   assert(!('id_solicitante' in publicItem)); assert(!('telefone' in publicItem)); assert(!('senha_hash' in publicItem));
   assert(!JSON.stringify(publicItem).includes('privado'));
   const own = policy.dto(common, row); assert.equal(own.latitude, -29.99912345); assert.equal(own.descricao, row.descricao);
-  const accepted = policy.dto(volunteer, { ...row, atendimento_status: 'aceito' });
+  assert.equal(policy.dto(volunteer,{...row,atendimento_status:'aceito'}).endereco_disponivel,false);
+  const accepted = policy.dto(volunteer, { ...row, atendimento_status: 'aceito', privado_autorizado:true });
   assert.equal(accepted.endereco_referencia, row.endereco_referencia); assert.equal(accepted.localizacao_aproximada, false);
   for(const status of ['finalizada', 'cancelada']) assert.equal(policy.dto(volunteer, { ...row, status, atendimento_status: 'aceito' }).endereco_disponivel, false);
   assert.equal(policy.dto(volunteer, { ...row, atendimento_status: 'finalizado' }).endereco_disponivel, false);

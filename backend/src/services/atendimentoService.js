@@ -26,12 +26,14 @@ async function action(uid,id,kind){
  const mine=accepted.find(x=>x.id_voluntario===uid);
  if(kind==='aceitar'&&mine&&o.status==='em_atendimento'){const r=await ensureConversation(db,o,uid);await db.commit();return r}
  if(kind==='conversas'&&mine&&['aberta','em_atendimento'].includes(o.status)){const r=await ensureConversation(db,o,uid);await db.commit();return r}
- if(o.status!=='aberta'||accepted.length)throw new AtendimentoError('Pedido indisponível ou já assumido. Atualize a lista.',409);
+ if(o.status!=='aberta'||accepted.length||o.aguarda_reabertura)throw new AtendimentoError('Pedido indisponível ou já assumido. Atualize a lista.',409);
+ if(latest?.status==='desistiu')throw new AtendimentoError('Você desistiu deste pedido. O histórico permanece disponível.',409);
  if(refused&&!['recusar','desfazer-recusa'].includes(kind))throw new AtendimentoError('Desfaça a recusa antes de continuar.',403);
  let result={};
  if(kind==='aceitar'){
  await db.execute("INSERT INTO atendimento (id_ocorrencia,id_voluntario,status,aceito_em) VALUES (?,?,'aceito',CURRENT_TIMESTAMP)",[id,uid]);
  await db.execute("UPDATE ocorrencia SET status='em_atendimento' WHERE id_ocorrencia=?",[id]);result=await ensureConversation(db,o,uid);
+ await require('./acompanhamentoService').notify(db,o.id_solicitante,id,'aceite','Um voluntário assumiu seu pedido. Acompanhe e escolha se deseja compartilhar o local');
  }else if(kind==='recusar'){
  if(!refused)await db.execute("INSERT INTO atendimento (id_ocorrencia,id_voluntario,status,aceito_em,recusado_em) VALUES (?,?,'recusado',NULL,CURRENT_TIMESTAMP)",[id,uid]);
  }else if(kind==='desfazer-recusa'){
@@ -40,6 +42,7 @@ async function action(uid,id,kind){
  const [[old]]=await db.execute('SELECT id_conversa FROM conversa WHERE id_ocorrencia=? AND id_voluntario=?',[id,uid]);
  if(!old){const [[count]]=await db.execute('SELECT COUNT(*) n FROM conversa WHERE id_voluntario=? AND criada_em>DATE_SUB(NOW(),INTERVAL 1 HOUR)',[uid]);if(count.n>=20)throw new AtendimentoError('Limite de novas conversas atingido. Tente mais tarde.',429)}
  result=old||await ensureConversation(db,o,uid);
+ if(!old)await require('./acompanhamentoService').notify(db,o.id_solicitante,id,'conversa','Um voluntário iniciou uma conversa sobre seu pedido');
  }else throw new AtendimentoError('Ação inválida.');
  await db.commit();return result;
  }catch(e){await db.rollback();throw e}finally{db.release()}

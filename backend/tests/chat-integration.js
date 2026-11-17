@@ -45,6 +45,7 @@ async function run() {
     if (authenticate) { result.send({ type: 'auth', token }); await result.wait(e => e.type === 'auth_ok'); }
     return result;
   }
+  const conversations=new Map();
   const report = { run: runId, testes: [], usuarios: [], ocorrencias: [], mensagens: [] };
   try {
     const users = [];
@@ -66,6 +67,7 @@ async function run() {
     async function occurrence(owner, volunteer, status = 'em_atendimento', appointment = 'aceito') {
       const [o] = await pool.execute('INSERT INTO ocorrencia (id_solicitante,id_tipo,titulo,descricao,status) VALUES (?,?,?,?,?)', [owner.id_usuario, types[0].id_tipo, `Teste Chat ${runId}`, 'Registro de teste de integração do chat', status]);
       await pool.execute('INSERT INTO atendimento (id_ocorrencia,id_voluntario,status) VALUES (?,?,?)', [o.insertId, volunteer.id_usuario, appointment]);
+      if(appointment!=='recusado'){const uuid=crypto.randomUUID();await pool.execute('INSERT INTO conversa(id_conversa,id_ocorrencia,id_solicitante,id_voluntario) VALUES(?,?,?,?)',[uuid,o.insertId,owner.id_usuario,volunteer.id_usuario]);conversations.set(o.insertId,uuid)}
       report.ocorrencias.push(o.insertId);
       return o.insertId;
     }
@@ -75,13 +77,14 @@ async function run() {
     const finished = await occurrence(a, b, 'finalizada', 'finalizado');
     const cancelled = await occurrence(a, b, 'cancelada');
     const refused = await occurrence(a, b, 'aberta', 'recusado');
+    if(fs.existsSync('.chat-test.local.json'))fs.copyFileSync('.chat-test.local.json','.chat-test.previous-'+runId+'.local.json');
     fs.writeFileSync(path.resolve(__dirname, '../.chat-test.local.json'), JSON.stringify({ run: runId, senha: password, contas: users.map(u => ({ id_usuario: u.id_usuario, nome: u.nome, email: u.email })), ocorrencia_principal: first, ocorrencia_papeis_invertidos: reverse }, null, 2));
 
     const sa = await connect(a.token), sb = await connect(b.token), sc = await connect(c.token), sd = await connect(d.token);
-    const send = (client, to, occurrenceId, text, id) => client.send({ type: 'chat_message', request_id: id, id_ocorrencia: occurrenceId, id_destinatario: to.id_usuario, text });
+    const send = (client, to, occurrenceId, text, id) => client.send({ type: 'chat_message', request_id: id, id_conversa: conversations.get(occurrenceId), text });
     send(sa, b, first, ' Olá, B! ', 'a1');
     const ack = await sa.wait(e => e.type === 'chat_ack' && e.request_id === 'a1');
-    assert.equal(ack.mensagem.texto, 'Olá, B!'); assert.equal(ack.mensagem.id_remetente, a.id_usuario);
+    assert.equal(ack.mensagem.texto, 'Olá, B!'); assert.equal(ack.mensagem.minha,true); assert.equal(ack.mensagem.id_remetente,undefined);
     await sb.wait(e => e.type === 'chat_message' && e.mensagem.id_mensagem === ack.mensagem.id_mensagem);
     send(sb, a, first, 'Olá, A!', 'b1');
     const reply = await sb.wait(e => e.type === 'chat_ack' && e.request_id === 'b1');
@@ -118,7 +121,7 @@ async function run() {
     send(reopened, b, first, 'a'.repeat(1001), 'long');
     assert.equal((await reopened.wait(e => e.request_id === 'long')).codigo, 'INVALID_TEXT');
     reopened.send({ type: 'chat_message', request_id: 'forge', id_ocorrencia: first, id_destinatario: b.id_usuario, id_remetente: d.id_usuario, text: 'forjado' });
-    assert.equal((await reopened.wait(e => e.request_id === 'forge')).codigo, 'INVALID_SENDER');
+    assert.equal((await reopened.wait(e => e.request_id === 'forge')).codigo, 'INVALID_EVENT');
     reopened.socket.send('{bad json');
     await reopened.wait(e => e.codigo === 'INVALID_JSON');
     for (const id of [finished, cancelled]) {
@@ -131,7 +134,7 @@ async function run() {
     assert.equal((await sc.wait(e => e.request_id === 'intrude')).codigo, 'FORBIDDEN');
     send(reopened, b, reverse, 'Também sou voluntário neste outro pedido.', 'roles');
     await reopened.wait(e => e.type === 'chat_ack' && e.request_id === 'roles');
-    await sb.wait(e => e.type === 'chat_message' && e.mensagem.id_ocorrencia === reverse);
+    await sb.wait(e => e.type === 'chat_message' && e.mensagem.id_conversa === conversations.get(reverse));
     report.testes.push('Texto e JSON inválidos, remetente forjado, conversa encerrada e papéis não exclusivos');
 
     const invalid = await connect(null, false);
@@ -159,7 +162,7 @@ async function run() {
     assert.equal((await request('POST', '/usuarios/login', null, { email: d.email, senha: password + '2' })).status, 200);
     await request('PUT', '/usuarios/me/senha', d.token, { senhaAtual: password + '2', novaSenha: password, confirmarNovaSenha: password });
     const list = await request('GET', '/conversas', a.token);
-    assert(list.data.conversas.some(item => item.id_ocorrencia === first && item.interlocutor.id_usuario === b.id_usuario));
+    assert(list.data.conversas.some(item => item.id_ocorrencia === first && item.id_conversa === conversations.get(first)));
     assert(!JSON.stringify(list.data).includes('senha_hash'));
     report.testes.push('Cadastro, login, perfil, listagem, troca de senha e lista de conversas reais');
     const [messages] = await pool.query('SELECT id_mensagem,id_ocorrencia,id_remetente,id_destinatario,texto,enviada_em FROM mensagem WHERE id_ocorrencia IN (?,?) ORDER BY id_mensagem', [first, reverse]);

@@ -6,7 +6,7 @@ import api from '../services/api';
 import { TOKEN_KEY, limparSessao } from '../services/authStorage';
 import { connectChat, mergeMessages, websocketUrl } from '../services/chatProtocol';
 
-export default function useChat(navigation, occurrenceId, otherId) {
+export default function useChat(navigation, conversationId) {
   const focused = useIsFocused();
   const [appActive, setAppActive] = useState(AppState.currentState !== 'background');
   const [attempt, setAttempt] = useState(0);
@@ -31,7 +31,7 @@ export default function useChat(navigation, occurrenceId, otherId) {
   }, []);
   useEffect(() => {
     setMessages([]); setConversation(null); setCursor(null); setDraft(''); uncertainty.current = false;
-  }, [occurrenceId, otherId]);
+  }, [conversationId]);
 
   useEffect(() => {
     if (!focused || !appActive) { setStatus('Desconectado'); return undefined; }
@@ -52,8 +52,8 @@ export default function useChat(navigation, occurrenceId, otherId) {
       loadingHistory = true; setLoading(true);
       liveDuringRefresh = before ? null : [];
       try {
-        const { data } = await api.get(`/mensagens/ocorrencia/${occurrenceId}`, {
-          params: { id_interlocutor: otherId, limite: 50, ...(before ? { antes_de: before } : {}) }, signal: abort.signal,
+        const { data } = await api.get(`/conversas/${conversationId}/mensagens`, {
+          params: { limite: 50, ...(before ? { antes_de: before } : {}) }, signal: abort.signal,
         });
         if (!active) return;
         setConversation(data.conversa);
@@ -86,7 +86,7 @@ export default function useChat(navigation, occurrenceId, otherId) {
     setLoading(true); setStatus('Conectando…');
     async function start() {
       try {
-        if (!Number.isInteger(occurrenceId) || !Number.isInteger(otherId)) throw new Error('Conversa inválida.');
+        if (typeof conversationId !== 'string') throw new Error('Conversa inválida.');
         const token = await AsyncStorage.getItem(TOKEN_KEY);
         if (!active) return;
         if (!token) { await endSession(); return; }
@@ -107,8 +107,7 @@ export default function useChat(navigation, occurrenceId, otherId) {
               setError(event.mensagem || 'Não foi possível enviar.'); return;
             }
             const message = event.mensagem;
-            if (!['chat_ack', 'chat_message'].includes(event.type) || !message || message.id_ocorrencia !== occurrenceId) return;
-            if (![message.id_remetente, message.id_destinatario].includes(otherId)) return;
+            if (!['chat_ack', 'chat_message'].includes(event.type) || !message || message.id_conversa !== conversationId) return;
             liveDuringRefresh?.push(message);
             setMessages(old => mergeMessages(old, [message]));
             if (event.type === 'chat_ack' && event.request_id === pending.current?.id) {
@@ -123,14 +122,15 @@ export default function useChat(navigation, occurrenceId, otherId) {
       }
     }
     start();
+    const poll = setInterval(() => { if(active && connection.current?.ready()) history(); },15000);
     return () => {
-      active = false; abort.abort(); refresh.current = null;
+      clearInterval(poll); active = false; abort.abort(); refresh.current = null;
       connection.current?.close(); connection.current = null;
       if (pending.current) {
         clearTimeout(pending.current.timer); pending.current = null; uncertainty.current = true; setSending(false);
       }
     };
-  }, [focused, appActive, attempt, occurrenceId, otherId, navigation]);
+  }, [focused, appActive, attempt, conversationId, navigation]);
 
   const send = useCallback(() => {
     const text = draft.trim();
@@ -138,7 +138,7 @@ export default function useChat(navigation, occurrenceId, otherId) {
     if (!connection.current?.ready()) { setError('Aguarde uma conexão autenticada.'); return; }
     const id = `${Date.now()}-${++counter.current}-${Math.random().toString(36).slice(2, 10)}`;
     try {
-      connection.current.send({ type: 'chat_message', request_id: id, id_ocorrencia: occurrenceId, id_destinatario: otherId, text });
+      connection.current.send({ type: 'chat_message', request_id: id, id_conversa: conversationId, text });
       const timer = setTimeout(() => {
         if (pending.current?.id !== id) return;
         pending.current = null; uncertainty.current = true; setSending(false);
@@ -147,7 +147,7 @@ export default function useChat(navigation, occurrenceId, otherId) {
       }, 15000);
       pending.current = { id, text, timer }; setSending(true); setError('');
     } catch { setError('Não foi possível enviar. Seu texto foi mantido.'); }
-  }, [draft, conversation, occurrenceId, otherId]);
+  }, [draft, conversation, conversationId]);
 
   return { messages, conversation, userId, status, loading, error, cursor, draft, setDraft, sending, send,
     retry: () => setAttempt(value => value + 1), loadOlder: () => refresh.current?.(cursor) };

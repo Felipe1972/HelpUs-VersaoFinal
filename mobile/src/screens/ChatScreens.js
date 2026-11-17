@@ -1,3 +1,4 @@
+import usePollingRefresh from '../hooks/usePollingRefresh';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -11,6 +12,7 @@ export function ConversasScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  usePollingRefresh(setAttempt);
   useFocusEffect(useCallback(() => {
     let active = true;
     const abort = new AbortController();
@@ -33,23 +35,23 @@ export function ConversasScreen({ navigation }) {
     <Text style={ui.section}>SUA COMUNIDADE</Text>
     {loading && <ActivityIndicator color={colors.blue} accessibilityLabel="Carregando conversas" />}
     {error ? <Card><Text style={ui.subtitle}>{error}</Text><Button style={{ marginTop: 12 }} title="Tentar novamente" onPress={() => setAttempt(value => value + 1)} /></Card> : conversations.map(conversation =>
-      <ListRow key={conversation.id_ocorrencia + '-' + conversation.interlocutor.id_usuario} icon="person-outline"
+      <ListRow key={conversation.id_conversa} icon="person-outline"
         title={conversation.interlocutor.nome}
         subtitle={conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
-        onPress={() => navigation.navigate('Chat', { id_ocorrencia: conversation.id_ocorrencia, id_interlocutor: conversation.interlocutor.id_usuario, nome: conversation.interlocutor.nome })} />)}
-    {!loading && !error && !conversations.length && <Card><Text style={[ui.title, { fontSize: 20, marginBottom: 8 }]}>Suas conversas aparecerão aqui</Text><Text style={ui.subtitle}>Quando houver um atendimento aceito, você poderá conversar com a outra pessoa sobre o pedido de ajuda.</Text></Card>}
+        onPress={() => navigation.navigate('Chat', { id_conversa: conversation.id_conversa })} />)}
+    {!loading && !error && !conversations.length && <Card><Text style={[ui.title, { fontSize: 20, marginBottom: 8 }]}>Suas conversas aparecerão aqui</Text><Text style={ui.subtitle}>Voluntários podem iniciar contato nos pedidos disponíveis. As conversas aparecerão aqui.</Text></Card>}
   </Screen>;
 }
 
 export function ChatScreen({ navigation, route }) {
-  const chat = useChat(navigation, route?.params?.id_ocorrencia, route?.params?.id_interlocutor);
+  const chat = useChat(navigation, route?.params?.id_conversa);
   const scroll = useRef(null);
   const scrollToBottom = useRef(true);
   const previousLast = useRef(null);
   const last = chat.messages[chat.messages.length - 1]?.id_mensagem;
   if (last !== previousLast.current) { previousLast.current = last; scrollToBottom.current = true; }
   const readOnly = chat.conversation?.somente_leitura;
-  return <Screen title={chat.conversation?.interlocutor.nome || route?.params?.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
+  return <Screen title={chat.conversation?.interlocutor.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
     <View style={{ padding: 14, gap: 6 }}>
       <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? 'Conversa encerrada · somente leitura' : chat.status}</Text>
       {!!chat.error && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { fontSize: 12, textAlign: 'center' }]}>{chat.error}</Text>}
@@ -61,7 +63,7 @@ export function ChatScreen({ navigation, route }) {
       <Text style={s.day}>{chat.conversation?.titulo || 'CONVERSA'}</Text>
       {!chat.loading && !chat.messages.length && !chat.error && <Text style={ui.subtitle}>Ainda não há mensagens nesta conversa.</Text>}
       {chat.messages.map(message => {
-        const mine = message.id_remetente === chat.userId;
+        const mine = message.minha === true;
         return <View key={message.id_mensagem} style={[s.bubble, mine && s.mine]}>
           <Text style={[s.text, mine && { color: 'white' }]}>{message.texto}</Text>
           <Text style={[s.caption, mine && { color: '#DBEAFE' }]}>{mine ? 'Você' : chat.conversation?.interlocutor.nome} · {message.enviada_em ? new Date(message.enviada_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</Text>

@@ -67,17 +67,8 @@ async function deletarPorId(idUsuario) {
 }
 
 async function listarUsuarios() {
-  const [usuarios] = await pool.execute(
-    `SELECT id_usuario, nome, email, telefone, tipo_usuario,
-            eh_voluntario, status_verificacao, criado_em
-       FROM usuario
-      ORDER BY id_usuario ASC`,
-  );
-
-  return usuarios.map((usuario) => ({
-    ...usuario,
-    eh_voluntario: Boolean(usuario.eh_voluntario),
-  }));
+  const [usuarios] = await pool.execute('SELECT id_usuario,nome,eh_voluntario FROM usuario ORDER BY id_usuario ASC');
+  return usuarios.map(usuario => ({ id_usuario: usuario.id_usuario, nome: usuario.nome, eh_voluntario: Number(usuario.eh_voluntario) === 1 }));
 }
 
 async function criarUsuario({ nome, email, senhaHash, telefone, ehVoluntario }) {

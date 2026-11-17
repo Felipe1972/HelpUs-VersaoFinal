@@ -137,6 +137,8 @@ async function obterUsuarioLogado(request, response) {
 
 async function listar(request, response) {
   try {
+    const atual = await usuarioService.buscarPorId(request.usuario.id_usuario);
+    if (!atual || atual.status_verificacao === 'bloqueado') return response.status(403).json({ mensagem: 'Usuário indisponível.' });
     const usuarios = await usuarioService.listarUsuarios();
 
     return response.status(200).json({ usuarios });

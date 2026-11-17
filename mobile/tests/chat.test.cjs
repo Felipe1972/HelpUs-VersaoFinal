@@ -82,12 +82,13 @@ function hookHarness() {
   };
   vm.runInNewContext(`(function(require,module,exports){${code}\n})`, {
     console, AbortController, WebSocket: {},
+    setInterval: fn => { timers.set(++timerId, fn); return timerId; }, clearInterval: id => timers.delete(id),
     setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id),
   })(name => { assert(name in mocks, name); return mocks[name]; }, module, module.exports);
   return {
     sent, calls, timers,
     api(fn) { apiImpl = fn; },
-    render() { index = 0; const value = module.exports.default(navigation, 10, 2); pendingEffects.splice(0).forEach(fn => fn()); return value; },
+    render() { index = 0; const value = module.exports.default(navigation, "test-conversation"); pendingEffects.splice(0).forEach(fn => fn()); return value; },
     auth() { connected = true; options.onStatus('Conectado'); options.onEvent({ type: 'auth_ok', id_usuario: 1 }); },
     event(event) { options.onEvent(event); },
     disconnect() { connected = false; options.onStatus('Desconectado'); options.onDisconnect(); },
@@ -98,8 +99,8 @@ function hookHarness() {
   };
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
-const message = id => ({ id_mensagem: id, id_ocorrencia: 10, id_remetente: 1, id_destinatario: 2, texto: 'Olá', enviada_em: `2026-01-01T00:00:00Z` });
-const page = (messages = [], cursor = null) => ({ data: { conversa: { id_ocorrencia: 10, interlocutor: { id_usuario: 2, nome: 'B' }, somente_leitura: false }, mensagens: messages, proximo_cursor: cursor } });
+const message = id => ({ id_mensagem: id, id_conversa: "test-conversation", minha: true, texto: 'Olá', enviada_em: `2026-01-01T00:00:00Z` });
+const page = (messages = [], cursor = null) => ({ data: { conversa: { id_conversa: "test-conversation", interlocutor: { id_usuario: 2, nome: 'B' }, somente_leitura: false }, mensagens: messages, proximo_cursor: cursor } });
 
 test('hook preserva rascunho na queda e só limpa após ack persistido; reabre histórico e fecha ao sair', async t => {
   const h = hookHarness(); t.after(() => h.dispose());

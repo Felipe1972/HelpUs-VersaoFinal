@@ -48,16 +48,11 @@ export default function UsuariosScreen({ navigation }) {
     return (
       <View style={styles.card}>
         <Text style={styles.name}>{item.nome}</Text>
-        <Text style={styles.detail}>{item.email}</Text>
-        <Text style={styles.detail}>
-          {item.telefone || 'Telefone não informado'}
-        </Text>
-
         <View style={styles.tags}>
           <Text style={styles.tag}>
             {item.eh_voluntario ? 'Voluntário' : 'Usuário'}
           </Text>
-          <Text style={styles.tag}>{item.status_verificacao}</Text>
+
         </View>
       </View>
     );

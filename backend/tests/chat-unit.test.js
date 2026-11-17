@@ -33,6 +33,7 @@ test('socket exige auth, expira, rejeita troca de identidade e não confirma fal
         return { id_usuario: 1, exp: Date.now() / 1000 + (token === 'short' ? 0.15 : 30) };
       },
       authorize: async () => ({}),
+      resolveConversation: async () => ({occurrenceId:1,otherId:2}),
       saveMessage: async () => { saves++; throw new Error('database offline'); },
     },
   });
@@ -62,7 +63,7 @@ test('socket exige auth, expira, rejeita troca de identidade e não confirma fal
   const writer = await client();
   writer.send(JSON.stringify({ type: 'auth', token: 'good' }));
   await once(writer, 'message');
-  writer.send(JSON.stringify({ type: 'chat_message', request_id: 'fail', id_ocorrencia: 1, id_destinatario: 2, text: 'Olá' }));
+  writer.send(JSON.stringify({ type: 'chat_message', request_id: 'fail', id_conversa: 'test-conversation', text: 'Olá' }));
   const failure = JSON.parse((await once(writer, 'message'))[0]);
   assert.equal(failure.type, 'chat_error'); assert.equal(failure.codigo, 'INTERNAL_ERROR'); assert.equal(saves, 1);
 });

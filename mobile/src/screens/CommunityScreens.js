@@ -1,7 +1,7 @@
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
-import { Screen, Card, Button, DemoNotice, ListRow, IconButton, goMain, colors, ui } from '../components/UI';
+import { Screen, Card, Button, DemoNotice, ListRow, goMain, colors, ui } from '../components/UI';
 import { notices, occurrence } from '../data/demo';
 import { useDemo } from '../context/DemoContext';
 import { PedidoDetalhesScreen } from './PedidosScreen';
@@ -43,30 +43,23 @@ export function OcorrenciaDetalhesScreen(props) {
   return <DemoDetalhesScreen {...props} />;
 }
 function DemoDetalhesScreen({ navigation }) {
-  const { favorite, setFavorite, response, setResponse } = useDemo();
+  const { response, setResponse } = useDemo();
   function respond(value) { setResponse(value); Alert.alert('Demonstração', `Resposta “${value}” registrada apenas nesta sessão. Ninguém foi notificado.`); }
   return <Screen title="Ocorrência local" navigation={navigation} back active="Notificacoes"><DemoNotice />
     <Card style={s.detail}>
-      <View style={ui.row}><Text style={[ui.title, { flex: 1 }]}>{occurrence.title}</Text><IconButton name={favorite ? 'heart' : 'heart-outline'} label={favorite ? 'Remover dos favoritos' : 'Salvar nos favoritos'} onPress={() => setFavorite(!favorite)} /></View>
+      <Text style={ui.title}>{occurrence.title}</Text>
       <Text style={[ui.title, s.centerText, { fontSize: 23 }]}>Uma pessoa da comunidade precisa de ajuda</Text>
       <View style={s.message}><Text style={ui.label}>Mensagem:</Text><Text style={[ui.title, s.centerText, { fontSize: 23, lineHeight: 31 }]}>{occurrence.description}</Text></View>
       {response && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, s.centerText]}>Sua resposta: {response} · simulação</Text>}
-      <View style={ui.row}><Button style={{ flex: 1 }} title="ACEITAR" onPress={() => respond('Aceito')} /><Button style={{ flex: 1 }} title="RECUSAR" tone="red" onPress={() => respond('Recusado')} /></View>
+      <Text style={ui.subtitle}>Aceitar ou recusar pedidos ainda não está disponível. Este exemplo não cria atendimentos.</Text>
       <Button title="Enviar mensagem" tone="soft" onPress={() => navigation.navigate('Conversas')} />
     </Card>
   </Screen>;
 }
 
-export function FavoritosScreen({ navigation }) {
-  const { favorite } = useDemo();
-  return <Screen title="Favoritos" navigation={navigation} back><DemoNotice />
-    {favorite ? <ListRow icon="heart" title={occurrence.title} subtitle="Salvo nesta sessão" onPress={() => navigation.navigate('OcorrenciaDetalhes')} /> : <Card style={s.detail}><View style={[s.symbol, { backgroundColor: '#EAF2FF' }]}><Ionicons name="heart-outline" size={48} color={colors.blue} /></View><Text style={[ui.title, s.centerText]}>Guarde o que importa</Text><Text style={[ui.subtitle, s.centerText]}>Toque no coração nos detalhes de uma ocorrência para encontrá-la aqui.</Text><Button title="Explorar ocorrência de exemplo" onPress={() => navigation.navigate('OcorrenciaDetalhes')} /></Card>}
-  </Screen>;
-}
-
 export function MenuScreen({ navigation }) {
   return <Screen title="Help Us" navigation={navigation} back><Text style={ui.section}>CUIDADO, APOIO E COMUNIDADE</Text>
-    {[['home-outline', 'Início', 'Seu mapa e localização', 'Home'], ['heart-outline', 'Favoritos', 'Ocorrências salvas', 'Favoritos'], ['chatbubbles-outline', 'Conversas', 'Apoio começa com uma conversa', 'Conversas'], ['notifications-outline', 'Avisos e Alertas', 'Acompanhe a comunidade', 'Notificacoes'], ['person-outline', 'Meu perfil', 'Seus dados e sua conta', 'Perfil'], ['people-outline', 'Usuários', 'Lista de usuários cadastrados', 'Usuarios']].map(([icon, title, subtitle, route]) => <ListRow key={route} {...{ icon, title, subtitle }} onPress={() => goMain(navigation, route)} />)}
+    {[['home-outline', 'Início', 'Seu mapa e localização', 'Home'], ['chatbubbles-outline', 'Conversas', 'Apoio começa com uma conversa', 'Conversas'], ['notifications-outline', 'Avisos e Alertas', 'Acompanhe a comunidade', 'Notificacoes'], ['person-outline', 'Meu perfil', 'Seus dados e sua conta', 'Perfil'], ['people-outline', 'Usuários', 'Lista de usuários cadastrados', 'Usuarios']].map(([icon, title, subtitle, route]) => <ListRow key={route} {...{ icon, title, subtitle }} onPress={() => goMain(navigation, route)} />)}
     <Button title="Solicitar ajuda" onPress={() => navigation.navigate('SolicitarAjuda')} />
     <Button title="Emergência · SOS" tone="red" onPress={() => navigation.navigate('SOS')} />
   </Screen>;

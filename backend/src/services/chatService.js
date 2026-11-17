@@ -18,7 +18,7 @@ function positiveId(value, field) {
 }
 
 async function activeUser(id, db = pool) {
-  const [rows] = await db.execute('SELECT id_usuario, nome, status_verificacao FROM usuario WHERE id_usuario = ?', [id]);
+  const [rows] = await db.execute('SELECT id_usuario, nome, eh_voluntario, status_verificacao FROM usuario WHERE id_usuario = ?', [id]);
   if (!rows[0] || rows[0].status_verificacao === 'bloqueado') {
     throw new ChatError('USER_UNAVAILABLE', 'Usuário indisponível.', 403);
   }
@@ -40,38 +40,27 @@ async function authenticate(token) {
 }
 
 async function authorize(userId, occurrenceId, otherId, db = pool, lock = false) {
-  userId = positiveId(userId, 'Usuário');
-  occurrenceId = positiveId(occurrenceId, 'Ocorrência');
-  otherId = positiveId(otherId, 'Interlocutor');
-  if (userId === otherId) throw new ChatError('FORBIDDEN', 'Conversa não autorizada.', 403);
-  const [occurrences] = await db.execute(
-    `SELECT id_ocorrencia, id_solicitante, titulo, status FROM ocorrencia WHERE id_ocorrencia = ?${lock ? ' FOR UPDATE' : ''}`,
-    [occurrenceId],
-  );
-  const occurrence = occurrences[0];
-  if (!occurrence || ![userId, otherId].includes(occurrence.id_solicitante)) {
-    throw new ChatError('FORBIDDEN', 'Conversa não autorizada.', 403);
-  }
-  const volunteerId = occurrence.id_solicitante === userId ? otherId : userId;
-  // O atendimento mais recente define o vínculo atual, mesmo se houver registros antigos.
-  const [appointments] = await db.execute(
-    `SELECT id_atendimento, status FROM atendimento WHERE id_ocorrencia = ? AND id_voluntario = ?
-     ORDER BY id_atendimento DESC LIMIT 1${lock ? ' FOR UPDATE' : ''}`,
-    [occurrenceId, volunteerId],
-  );
-  const appointment = appointments[0];
-  if (!appointment || !['aceito', 'finalizado'].includes(appointment.status)) {
-    throw new ChatError('FORBIDDEN', 'Conversa não autorizada.', 403);
-  }
-  await activeUser(userId, db);
-  const other = await activeUser(otherId, db);
-  return {
-    id_ocorrencia: occurrenceId,
-    titulo: occurrence.titulo,
-    interlocutor: { id_usuario: other.id_usuario, nome: other.nome },
-    somente_leitura: appointment.status !== 'aceito' || ['finalizada', 'cancelada'].includes(occurrence.status),
-  };
+ userId=positiveId(userId,'Usuário');otherId=positiveId(otherId,'Interlocutor');occurrenceId=positiveId(occurrenceId,'Ocorrência');
+ const c=await require('./atendimentoService').context(db,occurrenceId,userId,lock);
+ if(userId===otherId||![userId,otherId].includes(c.o.id_solicitante))throw new ChatError('FORBIDDEN','Conversa não autorizada.',403);
+ const vid=c.o.id_solicitante===userId?otherId:userId;
+ const [[conv]]=await db.execute('SELECT id_conversa FROM conversa WHERE id_ocorrencia=? AND id_voluntario=?',[occurrenceId,vid]);
+ if(!conv)throw new ChatError('FORBIDDEN','Conversa não autorizada.',403);
+ const viewer=await activeUser(userId,db),other=await activeUser(otherId,db);
+ const volunteer=vid===userId?viewer:other,latest=c.a.find(x=>x.id_voluntario===vid);
+ const accepted=latest?.status==='aceito',refused=latest?.status==='recusado'&&!latest.recusa_desfeita_em;
+ const active=['aberta','em_atendimento'].includes(c.o.status);
+ const writable=Number(volunteer.eh_voluntario)===1&&active&&(accepted||(!refused&&c.o.status==='aberta'&&!c.accepted.length));
+ const anonymous=userId===vid&&!(accepted&&active&&Number(volunteer.eh_voluntario)===1);
+ return {id_conversa:conv.id_conversa,id_ocorrencia:occurrenceId,titulo:anonymous?'Pedido de ajuda':c.o.titulo,interlocutor:{nome:anonymous?'Anônimo':other.nome},somente_leitura:!writable};
 }
+async function resolveConversation(userId,id,db=pool){
+ if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))throw new ChatError('INVALID_ID','Conversa inválida.');
+ const [[c]]=await db.execute('SELECT * FROM conversa WHERE id_conversa=? AND (id_solicitante=? OR id_voluntario=?)',[id,userId,userId]);
+ if(!c)throw new ChatError('FORBIDDEN','Conversa não autorizada.',403);
+ return {occurrenceId:c.id_ocorrencia,otherId:c.id_solicitante===userId?c.id_voluntario:c.id_solicitante};
+}
+function publicMessage(row,userId,id){return {id_mensagem:row.id_mensagem,id_conversa:id,texto:row.texto,enviada_em:row.enviada_em,minha:row.id_remetente===userId};}
 
 const messageColumns = `id_mensagem, id_ocorrencia, id_remetente, id_destinatario, texto,
   UNIX_TIMESTAMP(enviada_em) AS enviada_epoch`;
@@ -97,37 +86,14 @@ async function history(userId, occurrenceId, otherId, before, limit = 50) {
   const hasMore = rows.length > pageSize;
   const page = rows.slice(0, pageSize);
   const next = hasMore ? page[page.length - 1].id_mensagem : null;
-  return { conversa: conversation, mensagens: page.map(messageDTO).sort((a, b) => (a.enviada_em || '').localeCompare(b.enviada_em || '') || a.id_mensagem - b.id_mensagem), proximo_cursor: next };
+  return { conversa: conversation, mensagens: page.map(row => publicMessage(messageDTO(row),userId,conversation.id_conversa)).sort((a, b) => (a.enviada_em || '').localeCompare(b.enviada_em || '') || a.id_mensagem - b.id_mensagem), proximo_cursor: next };
 }
 
-async function conversations(userId) {
-  await activeUser(userId);
-  const [pairs] = await pool.execute(
-    `SELECT o.id_ocorrencia, IF(o.id_solicitante = ?, a.id_voluntario, o.id_solicitante) AS outro
-     FROM ocorrencia o JOIN atendimento a ON a.id_ocorrencia = o.id_ocorrencia
-     WHERE (o.id_solicitante = ? OR a.id_voluntario = ?) AND a.id_voluntario <> o.id_solicitante
-     AND a.status IN ('aceito', 'finalizado') AND NOT EXISTS (
-       SELECT 1 FROM atendimento novo WHERE novo.id_ocorrencia = a.id_ocorrencia
-       AND novo.id_voluntario = a.id_voluntario AND novo.id_atendimento > a.id_atendimento)`,
-    [userId, userId, userId],
-  );
-  const result = [];
-  for (const pair of pairs) {
-    try {
-      const conversation = await authorize(userId, pair.id_ocorrencia, pair.outro);
-      const [last] = await pool.execute(
-        `SELECT ${messageColumns} FROM mensagem WHERE id_ocorrencia = ?
-         AND ((id_remetente = ? AND id_destinatario = ?) OR (id_remetente = ? AND id_destinatario = ?))
-         ORDER BY id_mensagem DESC LIMIT 1`, [pair.id_ocorrencia, userId, pair.outro, pair.outro, userId],
-      );
-      result.push({ ...conversation, ultima_mensagem: last[0] ? messageDTO(last[0]) : null });
-    } catch (error) {
-      if (!(error instanceof ChatError)) throw error;
-    }
-  }
-  return result.sort((a, b) => (b.ultima_mensagem?.id_mensagem || 0) - (a.ultima_mensagem?.id_mensagem || 0) || b.id_ocorrencia - a.id_ocorrencia);
+async function conversations(userId){
+ await activeUser(userId);const [rows]=await pool.execute('SELECT * FROM conversa WHERE id_solicitante=? OR id_voluntario=?',[userId,userId]);const out=[];
+ for(const c of rows){try{const other=c.id_solicitante===userId?c.id_voluntario:c.id_solicitante;const h=await history(userId,c.id_ocorrencia,other,null,1);out.push({...h.conversa,ultima_mensagem:h.mensagens.at(-1)||null})}catch(e){if(!(e instanceof ChatError)&&e.status!==403)throw e}}
+ return out.sort((a,b)=>(b.ultima_mensagem?.id_mensagem||0)-(a.ultima_mensagem?.id_mensagem||0));
 }
-
 function validateMessage(event) {
   if (event.type !== 'chat_message') throw new ChatError('INVALID_EVENT', 'Evento desconhecido.');
   if (Object.hasOwn(event, 'id_remetente')) throw new ChatError('INVALID_SENDER', 'O remetente é definido pela sessão.');
@@ -163,4 +129,4 @@ async function saveMessage(claims, event) {
   } finally { db.release(); }
 }
 
-module.exports = { ChatError, positiveId, activeUser, authenticate, authorize, history, conversations, validateMessage, saveMessage };
+module.exports = { resolveConversation, publicMessage, ChatError, positiveId, activeUser, authenticate, authorize, history, conversations, validateMessage, saveMessage };

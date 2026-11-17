@@ -31,11 +31,11 @@ function attachChatServer(server, options = {}) {
       if (!sockets) continue;
       try {
         const other = id === message.id_remetente ? message.id_destinatario : message.id_remetente;
-        await service.authorize(id, message.id_ocorrencia, other);
+        const conversation = await service.authorize(id, message.id_ocorrencia, other);
         for (const socket of sockets) {
           if (socket === origin) continue;
           if (socket.claims.exp * 1000 <= Date.now()) { authFailure(socket); continue; }
-          send(socket, { type: 'chat_message', mensagem: message });
+          send(socket, { type: 'chat_message', mensagem: service.publicMessage(message,id,conversation.id_conversa) });
         }
       } catch {
         // A mensagem já está persistida. Uma entrega indisponível será recuperada pelo histórico.
@@ -110,18 +110,21 @@ function attachChatServer(server, options = {}) {
       chain = chain.then(async () => {
         if (socket.readyState !== WebSocket.OPEN) return;
         try {
-          chat.validateMessage(event);
-          const fingerprint = JSON.stringify([event.id_ocorrencia, event.id_destinatario, event.text.trim()]);
+          if(Object.hasOwn(event,'id_remetente')||Object.hasOwn(event,'id_destinatario')||Object.hasOwn(event,'id_ocorrencia'))throw new chat.ChatError('INVALID_EVENT','Use o identificador da conversa.');
+          const pair=await service.resolveConversation(socket.claims.id_usuario,event.id_conversa);
+          const internal={...event,id_ocorrencia:pair.occurrenceId,id_destinatario:pair.otherId};
+          chat.validateMessage(internal);
+          const fingerprint = JSON.stringify([internal.id_ocorrencia, internal.id_destinatario, event.text.trim()]);
           const previous = acknowledgements.get(event.request_id);
           if (previous) {
             if (previous.fingerprint !== fingerprint) throw new chat.ChatError('INVALID_REQUEST', 'Identificador já utilizado para outro envio.');
-            await service.authorize(socket.claims.id_usuario, event.id_ocorrencia, event.id_destinatario);
-            send(socket, previous.ack);
+            await service.authorize(socket.claims.id_usuario, internal.id_ocorrencia, internal.id_destinatario);
+            send(socket, {...previous.ack,mensagem:service.publicMessage(previous.raw,socket.claims.id_usuario,event.id_conversa)});
             return;
           }
-          const message = await service.saveMessage(socket.claims, event);
-          const ack = { type: 'chat_ack', request_id: event.request_id, mensagem: message };
-          acknowledgements.set(event.request_id, { fingerprint, ack });
+          const message = await service.saveMessage(socket.claims, internal);
+          const ack = { type: 'chat_ack', request_id: event.request_id, mensagem: service.publicMessage(message,socket.claims.id_usuario,event.id_conversa) };
+          acknowledgements.set(event.request_id, { fingerprint, ack, raw: message });
           if (acknowledgements.size > 100) acknowledgements.delete(acknowledgements.keys().next().value);
           send(socket, ack);
           await deliver(message, socket);

@@ -6,10 +6,10 @@ import PerfilScreen from '../screens/PerfilScreen';
 import UsuariosScreen from '../screens/UsuariosScreen';
 import TrocarSenhaScreen from '../screens/TrocarSenhaScreen';
 import HomeScreen from '../screens/HomeScreen';
-import PedidosScreen from '../screens/PedidosScreen';
+import PedidosScreen, { MeusPedidosScreen } from '../screens/PedidosScreen';
 import { DemoProvider } from '../context/DemoContext';
 import { ConversasScreen, ChatScreen } from '../screens/ChatScreens';
-import { NotificacoesScreen, AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, FavoritosScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
+import { NotificacoesScreen, AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
 
 const Stack = createNativeStackNavigator();
 
@@ -61,7 +61,7 @@ export default function AppNavigator() {
           component={TrocarSenhaScreen}
           options={{ headerShown: false }}
         />
-        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Notificacoes: NotificacoesScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, Favoritos: FavoritosScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
+        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Notificacoes: NotificacoesScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
     </NavigationContainer></DemoProvider>
   );

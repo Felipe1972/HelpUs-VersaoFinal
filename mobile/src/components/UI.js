@@ -28,13 +28,12 @@ export function IconButton({ name, label, onPress, color = colors.blue, disabled
 export function Header({ title, navigation, back = false, auth = false }) {
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
-  return <View style={[s.header, { paddingTop: insets.top + 4 }]}>
+  return <View style={[s.header, { paddingTop: insets.top + 4, paddingLeft: Math.max(insets.left, 16), paddingRight: Math.max(insets.right, 16) }]}>
     {focused && <StatusBar style="light" />}
     <View style={s.headerRow}>
-      {!auth || back ? <IconButton name={back ? 'arrow-back' : 'menu'} color="white" label={back ? 'Voltar' : 'Abrir menu'} onPress={() => back ? (navigation.canGoBack() ? navigation.goBack() : goMain(navigation, 'Home')) : navigation.navigate('Menu')} /> : <View style={s.iconButton} />}
-      {!auth ? <IconButton name="heart-outline" color="white" label="Abrir favoritos" onPress={() => navigation.navigate('Favoritos')} /> : <View style={s.iconButton} />}
+      {!auth || back ? <IconButton name={back ? 'arrow-back' : 'menu'} color="white" label={back ? 'Voltar' : 'Abrir menu'} onPress={() => back ? (navigation.canGoBack() ? navigation.goBack() : goMain(navigation, 'Home')) : navigation.navigate('Menu')} /> : null}
+      <Text accessibilityRole="header" style={s.headerTitle}>{title}</Text>
     </View>
-    <Text accessibilityRole="header" style={s.headerTitle}>{title}</Text>
   </View>;
 }
 
@@ -66,9 +65,9 @@ export function ListRow({ icon, title, subtitle, onPress, color = colors.blue, t
 }
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { backgroundColor: colors.blue, paddingHorizontal: 16, paddingBottom: 20 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  headerTitle: { color: 'white', fontSize: 30, fontWeight: '800', textAlign: 'center', paddingHorizontal: 10 },
+  header: { backgroundColor: colors.blue, paddingHorizontal: 16, paddingBottom: 8 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', minHeight: 56, gap: 8 },
+  headerTitle: { flex: 1, color: 'white', fontSize: 26, fontWeight: '800', textAlign: 'left', paddingVertical: 6, flexShrink: 1 },
   iconButton: { width: 48, height: 44, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 24, paddingBottom: 28, gap: 20, flexGrow: 1 },
   bottom: { flexDirection: 'row', backgroundColor: 'white', borderTopWidth: 1, borderColor: colors.line, paddingTop: 8 },

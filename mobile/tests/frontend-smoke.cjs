@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const babel = require('@babel/core');
 const root = path.resolve(__dirname, '../src');
 let states, effects, cursor, calls, alerts;
+let intervals=[], appListeners=[];
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
 const react = {
   createElement: element,
@@ -18,6 +19,7 @@ const react = {
 const native = new Proxy({
   StyleSheet: { create: value => value, absoluteFill: {} },
   Platform: { OS: 'android' },
+  AppState: {currentState:'active',addEventListener:(_,fn)=>{appListeners.push(fn);return {remove(){appListeners=appListeners.filter(x=>x!==fn)}}}},
   Alert: { alert: (...args) => alerts.push(args) },
 }, { get: (target, name) => target[name] || name });
 let location = { __esModule: true, hasServicesEnabledAsync: async () => true, getLastKnownPositionAsync: async () => null };
@@ -42,6 +44,7 @@ function load(file) {
     if (name === 'react-native-maps') return { __esModule: true, default: 'MapView', Marker: 'Marker' };
     if (name === '@react-navigation/native') return { useIsFocused: () => true, useFocusEffect: effect => effects.push(effect), NavigationContainer: 'NavigationContainer' };
     // O ciclo real do hook e protocolo tem testes próprios; aqui validamos a tela.
+    if (name.endsWith('/usePollingRefresh')) return { __esModule: true, default: () => {} };
     if (name.endsWith('/useChat')) return { __esModule: true, default: () => ({ messages: [], conversation: null, status: 'Desconectado', loading: false, error: '', cursor: null, draft: '', sending: false, retry() {}, loadOlder() {}, send() {}, setDraft() {} }) };
     if (name === '@react-navigation/native-stack') return { createNativeStackNavigator: () => ({ Navigator: 'Navigator', Screen: 'Route' }) };
     if (name.endsWith('/api')) return { __esModule: true, default: api };
@@ -50,14 +53,15 @@ function load(file) {
     if (name.startsWith('.')) return load(path.relative(root, path.resolve(path.dirname(filename), name)));
     throw new Error(`Unexpected import: ${name}`);
   }
-  vm.runInNewContext(`(function(require,module,exports){${code}\n})`, { console, setTimeout, clearTimeout, AbortController })(mockRequire, module, module.exports);
+  vm.runInNewContext(`(function(require,module,exports){${code}\n})`, { console, setTimeout, clearTimeout, setInterval:fn=>{intervals.push(fn);return fn}, clearInterval:fn=>{intervals=intervals.filter(x=>x!==fn)}, AbortController })(mockRequire, module, module.exports);
   cache[filename] = module.exports;
   return module.exports;
 }
 function reset(seed = []) {
+  intervals=[];appListeners=[];native.AppState.currentState='active';
   states = seed; effects = []; cursor = 0; calls = []; alerts = [];
   apiResponse = null;
-  demo = { favorite: false, response: null, read: [], messages: [{ id: '1', text: 'Olá', mine: false }], resetDemo() { calls.push(['resetDemo']); }, setRead() {}, setFavorite() {}, setResponse() {}, setMessages() {} };
+  demo = { response: null, read: [], messages: [{ id: '1', text: 'Olá', mine: false }], resetDemo() { calls.push(['resetDemo']); }, setRead() {}, setResponse() {}, setMessages() {} };
 }
 function nodes(tree) { if (!tree || typeof tree !== 'object') return []; if (Array.isArray(tree)) return tree.flatMap(nodes); return [tree, ...nodes(tree.props?.children)]; }
 const nav = { navigate: (...args) => calls.push(['navigate', ...args]), reset: value => calls.push(['reset', value]), popTo: name => calls.push(['popTo', name]), goBack: () => {}, canGoBack: () => true, getState: () => ({ routes: [{ name: 'Home' }] }) };
@@ -93,6 +97,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     reset();
     location.requestForegroundPermissionsAsync = async () => ({ status: scenario === 'denied' ? 'denied' : 'granted' });
     location.Accuracy = { Balanced: 3 };
+    location.getForegroundPermissionsAsync = async () => ({status:scenario==='denied'?'denied':'granted'});
     location.getCurrentPositionAsync = async () => { if (scenario === 'error') throw new Error('GPS'); return { coords: { latitude: -30, longitude: -51 } }; };
     delete cache[path.resolve(root, 'screens/HomeScreen.js')];
     const Home = load('screens/HomeScreen').default;
@@ -144,6 +149,12 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   await actions.find(n => n.props?.title === 'Sair da conta').props.onPress();
   assert(calls.some(c => c[0] === 'clear'));
   assert.equal(calls.at(-1)[1].routes[0].name, 'Login');
+  const { schedulePayload } = load('components/SchedulePicker');
+  assert.equal(schedulePayload({mode:'agora'}).modalidade_horario,'agora');
+  assert.throws(()=>schedulePayload({mode:'agendado',date:'2020-1-1',hour:'12',minute:'00'}));
+  assert.throws(()=>schedulePayload({mode:'agendado',date:'2099-2-30',hour:'12',minute:'00'}));
+  const scheduled = schedulePayload({mode:'agendado',date:'2099-1-2',hour:'14',minute:'30'});
+  assert.equal(new Date(scheduled.necessaria_em).getHours(),14);
   const Pedidos = load('screens/PedidosScreen').default;
   const options = { tipos: [{ id_tipo: 3, nome: 'Medicamento' }], urgencias: ['baixa','media','alta'] };
   for (const scenario of ['granted', 'denied', 'error']) {
@@ -160,7 +171,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     assert.equal(nodes(render(Pedidos)).find(n => n.props?.title === 'Criar pedido de ajuda').props.disabled, true);
   }
   for (const failure of [false, true]) {
-    reset([options, '', 0, 3, 'media', '  Preciso de ajuda  ', { latitude: -30, longitude: -51 }, false, '', false, '', null]);
+    reset([options, '', 0, 3, 'media', '  Preciso de ajuda  ', { latitude: -30, longitude: -51 }, false, '', false, '', null, '', 'Resumo público', {mode:'agora'}]);
     let resolve, reject;
     apiResponse = () => new Promise((yes, no) => { resolve = yes; reject = no; });
     const action = nodes(render(Pedidos)).find(n => n.props?.title === 'Criar pedido de ajuda').props.onPress;
@@ -174,6 +185,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   reset();
   const item = { id_ocorrencia: 99, latitude: -30, longitude: -51, titulo: 'Pedido real', nome_tipo: 'Queda', nivel_urgencia: 'alta' };
   apiResponse = async () => ({ data: { ocorrencias: [item] } });
+  location.getForegroundPermissionsAsync = async () => ({ status: 'granted' });
   location.requestForegroundPermissionsAsync = async () => ({ status: 'granted' });
   location.getCurrentPositionAsync = async () => ({ coords: { latitude: -30, longitude: -51 } });
   const Home = load('screens/HomeScreen').default;
@@ -194,5 +206,78 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   effects.at(-1)(); await tick();
   assert.equal(states[0].latitude, -20, 'Falha da API preserva região do mapa');
   assert(states[6], 'Falha da consulta mostra erro');
+
+  // Perfil vem da resposta atual do servidor; o Home não usa AsyncStorage para autorizar.
+  for (const volunteer of [false, true]) {
+    reset();
+    const own = { ...item, meu_pedido: true };
+    const publicItem = { ...item, id_ocorrencia: 100, titulo: 'Pedido da comunidade', meu_pedido: false, localizacao_aproximada: true };
+    apiResponse = async () => ({ data: { ocorrencias: volunteer ? [own, publicItem] : [own], perfil: { eh_voluntario: volunteer } } });
+    render(Home); effects.forEach(fn => fn()); await tick();
+    const view = nodes(render(Home));
+    assert.equal(view.filter(n => n.type === 'Marker' && n.props.title !== 'Você está aqui').length, volunteer ? 2 : 1);
+    assert.equal(view.some(n => n.props?.children === 'Mostrar somente pedidos da comunidade'), volunteer);
+    if (volunteer) assert(view.find(n => n.type === 'Marker' && n.props.title === 'Pedido da comunidade').props.description.includes('aproximada'));
+    view.find(n => n.props?.title === 'Meus pedidos e histórico').props.onPress();
+    assert.equal(calls.at(-1)[1], 'MeusPedidos');
+  }
+  reset();
+  apiResponse = async () => ({ data: { ocorrencias: [{ ...item, status: 'finalizada' }] } });
+  // Uma resposta atrasada da sessão anterior não pode repovoar o mapa.
+  reset();
+  let finishOldRequest;
+  apiResponse = () => new Promise(resolve => { finishOldRequest = resolve; });
+  render(Home);
+  const focus = effects.at(-1);
+  const leave = focus();
+  const signal = calls.at(-1)[2].signal;
+  leave();
+  assert.equal(signal.aborted, true);
+  assert.equal(states[3].length, 0);
+  assert.equal(states[4], null);
+  assert.equal(states[8], null);
+  finishOldRequest({ data: { ocorrencias: [item], perfil: { eh_voluntario: true } } });
+  await tick();
+  assert.equal(states[3].length, 0, 'Resposta da sessão encerrada é descartada');
+  apiResponse = async () => ({ data: { ocorrencias: [], perfil: { eh_voluntario: false } } });
+  const leaveNew = focus(); await tick();
+  assert.equal(states[3].length, 0, 'Nova sessão comum sem pedidos mantém mapa vazio');
+  assert.equal(states[8].eh_voluntario, false);
+  leaveNew();
+  apiResponse = async () => ({ data: { ocorrencias: [{ ...item, meu_pedido: true }], perfil: { eh_voluntario: false } } });
+  focus(); await tick();
+  assert.equal(states[3][0].id_ocorrencia, 99, 'Retorno ao foco consulta pedidos novamente');
+  reset();
+  apiResponse = async () => ({ data: { ocorrencias: [{ ...item, status: 'finalizada' }] } });
+  const Mine = load('screens/PedidosScreen').MeusPedidosScreen;
+  render(Mine); effects.forEach(fn => fn()); await tick();
+  assert.equal(calls[0][2].params.escopo, 'meus');
+  assert(nodes(render(Mine)).some(n => n.props?.title === 'Ver detalhes'));
+  reset();
+  const Details = load('screens/PedidosScreen').PedidoDetalhesScreen;
+  apiResponse = async () => ({ data: { ocorrencia: { ...item, localizacao_aproximada: true, descricao_restrita: true, endereco_disponivel: false, descricao: null, endereco_referencia: null } } });
+  render(Details, { route: { params: { id_ocorrencia: 100 } } }); effects.forEach(fn => fn()); await tick();
+  assert(JSON.stringify(render(Details, { route: { params: { id_ocorrencia: 100 } } })).includes('Endereço protegido'));
+  reset();
+  let gpsCalls=0,resolvePoll;
+  location.getForegroundPermissionsAsync=async()=>({status:'granted'});
+  location.getCurrentPositionAsync=async()=>{gpsCalls++;return {coords:{latitude:-29.8,longitude:-51.1}}};
+  apiResponse=async()=>({data:{ocorrencias:[item],perfil:{eh_voluntario:true}}});
+  render(Home);const cleanups=effects.map(fn=>fn());await tick();
+  assert.equal(gpsCalls,1);assert.equal(states[0].latitude,-29.8);
+  let mapView=nodes(render(Home)).find(n=>n.type==='MapView');
+  assert(mapView);assert(!('region' in mapView.props),'Câmera não é controlada por cada render');
+  mapView.props.onRegionChangeComplete({latitude:-28,longitude:-50,latitudeDelta:.1,longitudeDelta:.1});
+  const poll=intervals.at(-1), count=calls.filter(c=>c[0]==='get').length;
+  apiResponse=()=>new Promise(r=>{resolvePoll=r});poll();poll();await tick();
+  assert.equal(calls.filter(c=>c[0]==='get').length,count+1,'Não sobrepõe consultas');
+  assert.equal(states[3].length,1,'Não esvazia marcadores durante polling');assert.equal(states[8].eh_voluntario,true);
+  resolvePoll({data:{ocorrencias:[item,{...item,id_ocorrencia:100,latitude:NaN}],perfil:{eh_voluntario:true}}});await tick();
+  assert.equal(states[3].length,1,'Coordenada inválida não chega ao MapView');assert.equal(states[0].latitude,-28);assert.equal(gpsCalls,1);
+  apiResponse=async()=>{throw Error('offline')};await poll();await tick();assert.equal(states[3].length,1);assert(states[6]);
+  native.AppState.currentState='background';const before=calls.length;await poll();assert.equal(calls.length,before);
+  native.AppState.currentState='active';apiResponse=async()=>({data:{ocorrencias:[item],perfil:{eh_voluntario:true}}});appListeners.forEach(fn=>fn('active'));await tick();assert.equal(gpsCalls,1,'Voltar ao app não repete GPS válido');
+  cleanups.forEach(fn=>fn?.());assert.equal(intervals.length,0);assert.equal(appListeners.length,0);assert.equal(states[3].length,0);
+  console.log('PASS: polling mantém câmera, mapa e marcadores; falha de API, coordenadas inválidas, segundo plano, limpeza e GPS sem chamadas repetidas.');
   console.log('PASS: regressões de conta/GPS/chat; 18 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -61,6 +61,12 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  assert.equal((await pool.query('SELECT status FROM atendimento WHERE id_atendimento=?',[ca]))[0][0].status,'cancelado');await act(cancelled,owner,'cancelar');
  const acceptCancel=await create();await Promise.allSettled([act(acceptCancel,v1,'aceitar'),act(acceptCancel,owner,'cancelar')]);assert.equal((await detail(acceptCancel,owner)).status,'cancelada');assert.equal((await pool.query("SELECT COUNT(*) n FROM atendimento WHERE id_ocorrencia=? AND status='aceito'",[acceptCancel]))[0][0].n,0);
  for(const oid of [3,12]){const [[o]]=await pool.query('SELECT id_solicitante FROM ocorrencia WHERE id_ocorrencia=?',[oid]);if(o){const meta=await detail(oid,{id_usuario:o.id_solicitante});assert(meta.acompanhamento.ambiguo);assert.equal(meta.acompanhamento.pode_compartilhar,false)}}
+ const duel=await create();await act(duel,v1,'aceitar');const da=(await detail(duel,owner)).acompanhamento.id_atendimento;
+ await Promise.allSettled([act(duel,owner,'compartilhar',{id_atendimento:da}),act(duel,owner,'revogar',{id_atendimento:da})]);
+ const lastConsent=(await pool.query('SELECT acao FROM consentimento_localizacao WHERE id_atendimento=? ORDER BY id_consentimento DESC LIMIT 1',[da]))[0][0];assert.equal((await detail(duel,v1)).endereco_disponivel,lastConsent?.acao==='compartilhar');
+ const ending=await Promise.allSettled([act(duel,v1,'desistir'),act(duel,owner,'finalizar')]);assert.equal(ending.filter(x=>x.status==='fulfilled').length,1);assert.equal((await detail(duel,v1)).endereco,null);
+ const rating=(await req('GET','/usuarios/me',winner)).usuario.reputacao;assert.equal(rating.media,5);assert.equal(rating.quantidade,1);
+ report.testes.push('Disputa desistência/conclusão com um único vencedor; consentimento concorrente consistente; média de avaliação conferida');
  const demo=await create({descricao_publica:'Demonstração final — pedido disponível',modalidade_horario:'agendado',necessaria_em:new Date(Date.now()+86400000).toISOString()});report.pedido_demonstracao=demo;
  report.testes.push('Cancelamento x compartilhamento/aceite serializados, terminal sem acesso privado, vínculos legados ambíguos protegidos');
  console.log('PASS:',report.testes.join('; '));

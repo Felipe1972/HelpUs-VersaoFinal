@@ -121,8 +121,9 @@ export default function PerfilScreen({ navigation }) {
           <Text style={ui.subtitle}>Que bom ter você na comunidade.</Text>
         </View>
         {[['E-mail', usuario.email], ['Telefone', usuario.telefone || 'Não informado'], ['Voluntário', usuario.eh_voluntario ? 'Sim' : 'Não'], ['Status', usuario.status_verificacao]].map(([label, value]) => <View key={label} style={{ borderTopWidth: 1, borderColor: colors.line, paddingTop: 14 }}><Text style={ui.label}>{label}</Text><Text selectable style={ui.subtitle}>{value}</Text></View>)}
+        {usuario.eh_voluntario&&<Text style={ui.subtitle}>{usuario.reputacao?usuario.reputacao.media.toFixed(1)+' / 5 · '+usuario.reputacao.quantidade+' avaliações':'Ainda sem avaliações recebidas'}</Text>}
       </Card> : <Card><Text style={ui.subtitle}>Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.</Text><Button style={{ marginTop: 16 }} title="Tentar novamente" onPress={() => setTentativa(value => value + 1)} /></Card>}
-      <Text style={ui.section}>MINHA CONTA</Text>
+      <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
       <ListRow icon="people-outline" title="Ver usuários" onPress={() => navigation.navigate('Usuarios')} />
       <ListRow icon="lock-closed-outline" title="Trocar senha" onPress={() => navigation.navigate('TrocarSenha')} />
       <Button title="Sair da conta" tone="soft" onPress={sair} />

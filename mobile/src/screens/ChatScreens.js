@@ -37,7 +37,7 @@ export function ConversasScreen({ navigation }) {
     {error ? <Card><Text style={ui.subtitle}>{error}</Text><Button style={{ marginTop: 12 }} title="Tentar novamente" onPress={() => setAttempt(value => value + 1)} /></Card> : conversations.map(conversation =>
       <ListRow key={conversation.id_conversa} icon="person-outline"
         title={conversation.interlocutor.nome}
-        subtitle={conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
+        subtitle={'Pedido #'+conversation.id_ocorrencia+' · '+conversation.status+' · '+conversation.titulo + (conversation.somente_leitura ? ' · Encerrada' : '') + '\n' + (conversation.ultima_mensagem?.texto || 'Inicie uma conversa')}
         onPress={() => navigation.navigate('Chat', { id_conversa: conversation.id_conversa })} />)}
     {!loading && !error && !conversations.length && <Card><Text style={[ui.title, { fontSize: 20, marginBottom: 8 }]}>Suas conversas aparecerão aqui</Text><Text style={ui.subtitle}>Voluntários podem iniciar contato nos pedidos disponíveis. As conversas aparecerão aqui.</Text></Card>}
   </Screen>;
@@ -52,8 +52,9 @@ export function ChatScreen({ navigation, route }) {
   if (last !== previousLast.current) { previousLast.current = last; scrollToBottom.current = true; }
   const readOnly = chat.conversation?.somente_leitura;
   return <Screen title={chat.conversation?.interlocutor.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
-    <View style={{ padding: 14, gap: 6 }}>
-      <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? 'Conversa encerrada · somente leitura' : chat.status}</Text>
+    <View style={{ padding: 14, gap: 6 }}>{chat.conversation?.id_ocorrencia&&<Button title={'Pedido #'+chat.conversation.id_ocorrencia+' · Acompanhar'} tone="soft" onPress={()=>navigation.navigate('Acompanhamento',{id_ocorrencia:chat.conversation.id_ocorrencia})}/>}
+      <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? chat.conversation?.motivo_somente_leitura || 'Conversa encerrada · somente leitura' : chat.status}</Text>
+      {chat.conversation?.status&&<Text style={ui.subtitle}>Status do pedido: {chat.conversation.status.replaceAll('_',' ')}</Text>}
       {!!chat.error && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { fontSize: 12, textAlign: 'center' }]}>{chat.error}</Text>}
       {(chat.error || ['Desconectado', 'Erro de conexão'].includes(chat.status)) && <Button title="Tentar novamente" tone="soft" onPress={chat.retry} />}
     </View>

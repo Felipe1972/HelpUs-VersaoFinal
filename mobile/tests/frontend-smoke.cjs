@@ -18,6 +18,7 @@ const react = {
 };
 const native = new Proxy({
   StyleSheet: { create: value => value, absoluteFill: {} },
+  useWindowDimensions:()=>({width:390,height:844,fontScale:1}),
   Platform: { OS: 'android' },
   AppState: {currentState:'active',addEventListener:(_,fn)=>{appListeners.push(fn);return {remove(){appListeners=appListeners.filter(x=>x!==fn)}}}},
   Alert: { alert: (...args) => alerts.push(args) },
@@ -71,7 +72,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 (async () => {
   reset();
   const routes = nodes(render(load('navigation/AppNavigator').default)).filter(n => n.type === 'Route').map(n => n.props.name);
-  assert.equal(new Set(routes).size, 18);
+  assert.equal(new Set(routes).size, 20);
   for (const file of ['screens/CommunityScreens', 'screens/ChatScreens']) {
     for (const component of Object.values(load(file))) {
       reset();
@@ -171,7 +172,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     assert.equal(nodes(render(Pedidos)).find(n => n.props?.title === 'Criar pedido de ajuda').props.disabled, true);
   }
   for (const failure of [false, true]) {
-    reset([options, '', 0, 3, 'media', '  Preciso de ajuda  ', { latitude: -30, longitude: -51 }, false, '', false, '', null, '', 'Resumo público', {mode:'agora'}]);
+    reset([options, '', 0, 3, 'media', '  Preciso de ajuda  ', { latitude: -30, longitude: -51 }, false, '', false, '', null, '', 'Resumo público', {mode:'agora'}, {rua:'Rua teste',numero:'1',bairro:'Centro',cidade:'Teste',estado:'RS',sem_numero:false,latitude:-30,longitude:-51,confirmed:true}, false]);
     let resolve, reject;
     apiResponse = () => new Promise((yes, no) => { resolve = yes; reject = no; });
     const action = nodes(render(Pedidos)).find(n => n.props?.title === 'Criar pedido de ajuda').props.onPress;
@@ -193,12 +194,12 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   let tree = render(Home);
   assert.equal(nodes(tree).filter(n => n.type === 'Marker').length, 2, 'Mapa mantém usuário e ocorrência');
   nodes(tree).find(n => n.type === 'Marker' && n.props.title === 'Pedido real').props.onPress();
-  tree = render(Home); nodes(tree).find(n => n.props?.accessibilityLabel === 'Ver detalhes do pedido').props.onPress();
+  tree = render(Home); nodes(tree).find(n => n.props?.title === 'Ver detalhes').props.onPress();
   assert.equal(calls.at(-1)[2].id_ocorrencia, 99);
   assert.equal(states[0].latitude, item.latitude, 'Retorno após POST centraliza no registro retornado pelo GET');
-  nodes(tree).find(n => n.props?.accessibilityLabel === 'Solicitar ajuda').props.onPress();
+  nodes(tree).find(n => n.props?.title === 'Solicitar ajuda').props.onPress();
   assert.equal(calls.at(-1)[1], 'SolicitarAjuda');
-  nodes(tree).find(n => n.props?.accessibilityLabel === 'Emergência SOS').props.onPress();
+  nodes(tree).find(n => n.props?.title === 'SOS').props.onPress();
   assert.equal(calls.at(-1)[1], 'SOS');
   const map = nodes(tree).find(n => n.type === 'MapView');
   map.props.onRegionChangeComplete({ latitude: -20, longitude: -40 });
@@ -215,11 +216,11 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     apiResponse = async () => ({ data: { ocorrencias: volunteer ? [own, publicItem] : [own], perfil: { eh_voluntario: volunteer } } });
     render(Home); effects.forEach(fn => fn()); await tick();
     const view = nodes(render(Home));
-    assert.equal(view.filter(n => n.type === 'Marker' && n.props.title !== 'Você está aqui').length, volunteer ? 2 : 1);
-    assert.equal(view.some(n => n.props?.children === 'Mostrar somente pedidos da comunidade'), volunteer);
-    if (volunteer) assert(view.find(n => n.type === 'Marker' && n.props.title === 'Pedido da comunidade').props.description.includes('aproximada'));
-    view.find(n => n.props?.title === 'Meus pedidos e histórico').props.onPress();
-    assert.equal(calls.at(-1)[1], 'MeusPedidos');
+    assert.equal(view.filter(n => n.type === 'Marker' && n.props.title !== 'Você está aqui').length, 1, 'Coordenadas coincidentes agrupadas sem deslocamento');
+    assert.equal(view.some(n => n.props?.children === 'Disponíveis'), volunteer);
+    if(volunteer){view.find(n=>n.type==='Marker'&&n.props.title==='2 pedidos neste ponto').props.onPress();assert.equal(states[11].length,2)}
+    view.find(n=>n.props?.accessibilityRole==='tab'&&nodes(n).some(t=>t.props?.children===(volunteer?'Pedidos':'Meus pedidos e histórico'))).props.onPress();
+    assert.equal(states[9],'meus');
   }
   reset();
   apiResponse = async () => ({ data: { ocorrencias: [{ ...item, status: 'finalizada' }] } });
@@ -278,6 +279,26 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   native.AppState.currentState='background';const before=calls.length;await poll();assert.equal(calls.length,before);
   native.AppState.currentState='active';apiResponse=async()=>({data:{ocorrencias:[item],perfil:{eh_voluntario:true}}});appListeners.forEach(fn=>fn('active'));await tick();assert.equal(gpsCalls,1,'Voltar ao app não repete GPS válido');
   cleanups.forEach(fn=>fn?.());assert.equal(intervals.length,0);assert.equal(appListeners.length,0);assert.equal(states[3].length,0);
+
+  // New address controls: reverse lookup is a suggestion, confirmation is explicit.
+  const {default:Editor,addressReady,addressPayload}=load('components/AddressEditor');
+  for(const fail of [false,true]){
+    reset();let value=null;
+    location.reverseGeocodeAsync=async()=>{if(fail)throw Error('offline');return[{street:'Rua sugerida',district:'Centro',city:'Teste',region:'RS',postalCode:'93000-000'}]};
+    const props={position:{latitude:-30,longitude:-51},value,onChange:v=>{value=v}};
+    render(Editor,props);const dispose=effects[0]();await tick();
+    assert.equal(value.latitude,-30);assert.equal(value.confirmed,false);assert(!addressReady(value));
+    if(!fail)assert.equal(value.rua,'Rua sugerida');else assert(states[0].includes('manualmente'));
+    value={...value,rua:'Rua teste',numero:'1',bairro:'Centro',cidade:'Teste',estado:'RS'};
+    let editor=nodes(render(Editor,{...props,value}));editor.find(n=>n.props?.title==='Confirmar endereço e ponto no mapa').props.onPress();assert(addressReady(value));assert(!('confirmed' in addressPayload(value)));
+    editor=nodes(render(Editor,{...props,value}));editor.find(n=>n.props?.accessibilityLabel==='Rua').props.onChangeText('Outra rua');assert.equal(value.confirmed,false);dispose();
+  }
+  reset();const Track=load('screens/AcompanhamentoScreen').default;const trackProps={route:{params:{id_ocorrencia:99}}};
+  apiResponse=async()=>({data:{ocorrencia:{...item,status:'em_atendimento',descricao_publica:'Resumo',endereco_disponivel:true,descricao:'PRIVADO_TESTE',acompanhamento:{pode_cancelar:true}}}});
+  render(Track,trackProps);effects.at(-1)();await tick();let track=render(Track,trackProps);assert(JSON.stringify(track).includes('PRIVADO_TESTE'));nodes(track).find(n=>n.props?.title==='Cancelar pedido').props.onPress();assert(!calls.some(c=>c[0]==='post'),'Cancelamento requer confirmação');
+  apiResponse=async()=>({data:{ocorrencia:{...item,status:'em_atendimento',descricao_publica:'Resumo',endereco_disponivel:false,descricao:null,acompanhamento:{}}}});
+  effects.at(-1)();await tick();assert(!JSON.stringify(render(Track,trackProps)).includes('PRIVADO_TESTE'),'Revogação remove conteúdo privado');
+  console.log('PASS: geocodificação/erro, confirmação e alteração de endereço; acompanhamento remove dados revogados e confirma cancelamento.');
   console.log('PASS: polling mantém câmera, mapa e marcadores; falha de API, coordenadas inválidas, segundo plano, limpeza e GPS sem chamadas repetidas.');
-  console.log('PASS: regressões de conta/GPS/chat; 18 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
+  console.log('PASS: regressões de conta/GPS/chat; 20 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

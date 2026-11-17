@@ -37,7 +37,9 @@ async function main() {
   await get('/ocorrencias?escopo=disponiveis',pedro,403);
   const opportunities = await get('/ocorrencias?escopo=disponiveis',volunteer);
   assert.equal(opportunities.perfil.eh_voluntario,true);
-  assert.deepEqual(ids(opportunities.ocorrencias),ids(rows.filter(o => valid(o) && o.id_solicitante !== volunteer.id_usuario)));
+  const [allAppointments]=await pool.query('SELECT * FROM atendimento ORDER BY id_atendimento DESC');
+  const eligible=rows.filter(o=>{const a=allAppointments.filter(x=>x.id_ocorrencia===o.id_ocorrencia);const own=a.find(x=>x.id_voluntario===volunteer.id_usuario);return valid(o)&&o.status==='aberta'&&!o.aguarda_reabertura&&o.id_solicitante!==volunteer.id_usuario&&!a.some((x,i)=>x.status==='aceito'&&!a.slice(0,i).some(y=>y.id_voluntario===x.id_voluntario))&&own?.status!=='desistiu'&&!(own?.status==='recusado'&&!own.recusa_desfeita_em)});
+  assert.deepEqual(ids(opportunities.ocorrencias),ids(eligible));
   assert(opportunities.ocorrencias.every(o => o.meu_pedido === false));
   const [appointments] = await pool.query('SELECT * FROM atendimento WHERE id_voluntario=?',[volunteer.id_usuario]);
   const publicRow = rows.find(o => valid(o) && o.id_solicitante !== volunteer.id_usuario && !appointments.some(a => a.id_ocorrencia === o.id_ocorrencia));

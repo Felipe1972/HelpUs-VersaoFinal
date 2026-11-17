@@ -51,7 +51,7 @@ function DemoDetalhesScreen({ navigation }) {
       <Text style={[ui.title, s.centerText, { fontSize: 23 }]}>Uma pessoa da comunidade precisa de ajuda</Text>
       <View style={s.message}><Text style={ui.label}>Mensagem:</Text><Text style={[ui.title, s.centerText, { fontSize: 23, lineHeight: 31 }]}>{occurrence.description}</Text></View>
       {response && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, s.centerText]}>Sua resposta: {response} · simulação</Text>}
-      <Text style={ui.subtitle}>Aceitar ou recusar pedidos ainda não está disponível. Este exemplo não cria atendimentos.</Text>
+      <Text style={ui.subtitle}>Este é um exemplo fictício. Para aceitar ou recusar pedidos reais, acesse Disponíveis na Home.</Text>
       <Button title="Enviar mensagem" tone="soft" onPress={() => navigation.navigate('Conversas')} />
     </Card>
   </Screen>;

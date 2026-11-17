@@ -1,3 +1,6 @@
+import AcompanhamentoScreen from '../screens/AcompanhamentoScreen';
+import MeuEnderecoScreen from '../screens/MeuEnderecoScreen';
+import NotificacoesReaisScreen from '../screens/NotificacoesReaisScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
@@ -9,7 +12,7 @@ import HomeScreen from '../screens/HomeScreen';
 import PedidosScreen, { MeusPedidosScreen } from '../screens/PedidosScreen';
 import { DemoProvider } from '../context/DemoContext';
 import { ConversasScreen, ChatScreen } from '../screens/ChatScreens';
-import { NotificacoesScreen, AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
+import { AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
 
 const Stack = createNativeStackNavigator();
 
@@ -61,7 +64,7 @@ export default function AppNavigator() {
           component={TrocarSenhaScreen}
           options={{ headerShown: false }}
         />
-        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Notificacoes: NotificacoesScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
+        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
     </NavigationContainer></DemoProvider>
   );

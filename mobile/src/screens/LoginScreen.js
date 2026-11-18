@@ -95,10 +95,6 @@ export default function LoginScreen({ navigation }) {
               {carregando ? 'Entrando...' : 'Entrar'}
             </Text>
           </Pressable>
-
-          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('RecuperarSenha')}>
-            <Text style={styles.link}>Esqueci a senha</Text>
-          </Pressable>
           <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Cadastro')}>
             <Text style={styles.link}>Não tenho conta</Text>
           </Pressable>

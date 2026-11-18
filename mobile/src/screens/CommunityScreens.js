@@ -65,14 +65,6 @@ export function MenuScreen({ navigation }) {
   </Screen>;
 }
 
-export function SOSScreen({ navigation }) {
-  return <Screen title="Emergência / SOS" navigation={navigation} back active="Home"><Card style={{ gap: 16 }}><Ionicons name="alert-circle-outline" size={48} color={colors.red} /><Text style={ui.title}>Espaço reservado para emergências</Text><Text style={ui.subtitle}>O SOS ainda não aciona ajuda ou serviços de emergência. Para um pedido cotidiano, utilize Solicitar ajuda na Home.</Text><Button title="Voltar à Home" tone="soft" onPress={() => navigation.popTo('Home')} /></Card></Screen>;
-}
-
-export function RecuperarSenhaScreen({ navigation }) {
-  return <Screen title="Recuperar acesso" navigation={navigation} auth back><Card style={s.detail}><Ionicons style={{ alignSelf: 'center' }} name="lock-closed-outline" size={52} color={colors.blue} /><Text style={[ui.title, s.centerText]}>Esqueceu a senha?</Text><Text style={[ui.subtitle, s.centerText]}>A recuperação por e-mail ainda não está disponível. Esta tela apresenta o fluxo futuro; nenhum e-mail será enviado.</Text><Text style={[ui.subtitle, s.centerText]}>Se você sabe sua senha atual, entre na conta e acesse Perfil → Trocar senha.</Text><Button title="Voltar ao login" onPress={() => navigation.goBack()} /></Card></Screen>;
-}
-
 const s = StyleSheet.create({
   detail: { gap: 24, paddingVertical: 28 },
   symbol: { width: 116, height: 116, borderRadius: 58, backgroundColor: '#FFF0F1', alignSelf: 'center', justifyContent: 'center', alignItems: 'center' },

@@ -1,3 +1,4 @@
+import SOSScreen from '../screens/SOSScreen';
 import ContaComplementosScreen from '../screens/ContaComplementosScreen';
 import PerfilVoluntarioScreen from '../screens/PerfilVoluntarioScreen';
 import { NotificationsProvider,notificationNavigation,notificationNavigationChanged } from '../context/NotificationsContext';
@@ -16,7 +17,7 @@ import HomeScreen from '../screens/HomeScreen';
 import PedidosScreen, { MeusPedidosScreen } from '../screens/PedidosScreen';
 import { DemoProvider } from '../context/DemoContext';
 import { ConversasScreen, ChatScreen } from '../screens/ChatScreens';
-import { AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen, SOSScreen, RecuperarSenhaScreen } from '../screens/CommunityScreens';
+import { AvisoScreen, AlertaEmergenciaScreen, OcorrenciaMapaScreen, OcorrenciaDetalhesScreen, MenuScreen } from '../screens/CommunityScreens';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,7 +69,7 @@ export default function AppNavigator() {
           component={TrocarSenhaScreen}
           options={{ headerShown: false }}
         />
-        {Object.entries({ EditarPerfil: ContaComplementosScreen, ContatosEmergencia: ContaComplementosScreen, PerfilVoluntario: PerfilVoluntarioScreen, NotificationSettings: NotificationSettingsScreen, Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
+        {Object.entries({ EditarPerfil: ContaComplementosScreen, ContatosEmergencia: ContaComplementosScreen, PerfilVoluntario: PerfilVoluntarioScreen, NotificationSettings: NotificationSettingsScreen, Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
     </NavigationContainer></NotificationsProvider></DemoProvider>
   );

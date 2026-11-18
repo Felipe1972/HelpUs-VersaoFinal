@@ -17,6 +17,15 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  const[owner,v1,v2,stranger]=accounts;
  await req('PUT','/meu-perfil',owner,{nome:'Teste Editado',telefone:'51999999999',eh_voluntario:true},400);
  await req('PUT','/meu-perfil',owner,{nome:'Teste Editado',telefone:'51999999999'});assert.equal((await req('GET','/usuarios/me',owner)).usuario.nome,'Teste Editado');
+ const changedEmail='editado.'+run+'@example.invalid';const editBody={nome:'Teste Editado',telefone:'51999999999',email:changedEmail};
+ await req('PUT','/meu-perfil',owner,{...editBody,senhaAtual:'errada'},400);
+ await req('PUT','/meu-perfil',owner,{...editBody,email:stranger.email,senhaAtual:senha},409);
+ await req('PUT','/meu-perfil',owner,{...editBody,email:'invalido',senhaAtual:senha},400);
+ await req('PUT','/meu-perfil',owner,{...editBody,senhaAtual:senha});
+ assert.equal((await req('POST','/usuarios/login',null,{email:changedEmail,senha})).usuario.id_usuario,owner.id_usuario);
+ await req('POST','/usuarios/login',null,{email:owner.email,senha},401);
+ await req('PUT','/usuarios/me/senha',owner,{senhaAtual:senha,novaSenha:senha+'X',confirmarNovaSenha:senha+'X'});
+ await req('POST','/usuarios/login',null,{email:changedEmail,senha:senha+'X'});
  const contact={nome:'Contato Teste',telefone:'51999999999',parentesco:'Amigo'};const cid=(await req('POST','/meus-contatos',owner,contact)).id_contato;
  assert.equal((await req('GET','/meus-contatos',stranger)).contatos.length,0);await req('PUT','/meus-contatos/'+cid,stranger,contact,404);await req('DELETE','/meus-contatos/'+cid,stranger,null,404);await req('PUT','/meus-contatos/'+cid,owner,{...contact,nome:'Contato Editado'});assert.equal((await req('GET','/meus-contatos',owner)).contatos[0].nome,'Contato Editado');await req('DELETE','/meus-contatos/'+cid,owner);assert.equal((await req('GET','/meus-contatos',owner)).contatos.length,0);
  const body={id_tipo:1,descricao:'DESCRICAO_PRIVADA_'+run,descricao_publica:'TESTE FINAL '+run,nivel_urgencia:'media',latitude:addr.latitude,longitude:addr.longitude,endereco:addr,modalidade_horario:'agora',fuso_horario:'America/Sao_Paulo'};

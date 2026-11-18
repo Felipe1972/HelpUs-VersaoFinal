@@ -124,7 +124,7 @@ function componentRegression() {
   componentRegression();
   reset();
   const routes = nodes(render(load('navigation/AppNavigator').default)).filter(n => n.type === 'Route').map(n => n.props.name);
-  assert.equal(new Set(routes).size, 24);
+  assert.equal(new Set(routes).size, 23);
   for (const file of ['screens/CommunityScreens', 'screens/ChatScreens']) {
     for (const component of Object.values(load(file))) {
       reset();
@@ -352,11 +352,13 @@ function componentRegression() {
   effects.at(-1)();await tick();assert(!JSON.stringify(render(Track,trackProps)).includes('PRIVADO_TESTE'),'Revogação remove conteúdo privado');
   reset();const Account=load('screens/ContaComplementosScreen').default;
  apiResponse=async()=>({data:{contatos:[{id_contato:1,nome:'Privado teste',telefone:'51999999999',parentesco:'Amigo'}]}});
- render(Account,{route:{name:'ContatosEmergencia'}});effects[0]();await tick();let accountTree=render(Account,{route:{name:'ContatosEmergencia'}});assert(JSON.stringify(accountTree).includes('Privado teste'));nodes(accountTree).find(n=>n.props?.title==='Remover contato').props.onPress();assert(!calls.some(c=>c[0]==='delete'));assert(alerts.length);
+ render(Account,{route:{name:'ContatosEmergencia'}});effects[0]();await tick();let accountTree=render(Account,{route:{name:'ContatosEmergencia'}});assert(JSON.stringify(accountTree).includes('Privado teste'));nodes(accountTree).find(n=>n.props?.accessibilityLabel==='Remover contato').props.onPress();assert(!calls.some(c=>c[0]==='delete'));assert(alerts.length);
+ nodes(accountTree).find(n=>n.props?.title==='Editar').props.onPress();accountTree=render(Account,{route:{name:'ContatosEmergencia'}});const oldTick=states[5];await nodes(accountTree).find(n=>n.props?.title==='Salvar contato').props.onPress();assert(calls.some(c=>c[0]==='put'&&c[1]==='/meus-contatos/1'));assert.equal(states[5],oldTick+1);assert.equal(states[2],null);
+ reset();const SOS=load('screens/SOSScreen').default;apiResponse=async()=>({data:{contatos:[{id_contato:1,nome:'Contato SOS',telefone:'51999999999',parentesco:'Amigo'}]}});render(SOS);effects[0]();await tick();assert(JSON.stringify(render(SOS)).includes('Contato SOS'));
  reset();const Public=load('screens/PerfilVoluntarioScreen').default;apiResponse=async()=>({data:{perfil:{primeiro_nome:'Ana',avaliacoes:0,media:null,atendimentos_concluidos:2}}});render(Public,{route:{params:{id_conversa:'test'}}});effects[0]();await tick();assert(JSON.stringify(render(Public,{route:{params:{id_conversa:'test'}}})).includes('Ainda sem avaliações.'));
  console.log('PASS: contatos renderizados com confirmação de exclusão; perfil público sem avaliação fictícia.');
  console.log('PASS: geocodificação/erro, confirmação e alteração de endereço; acompanhamento remove dados revogados e confirma cancelamento.');
   console.log('PASS: polling mantém câmera, mapa e marcadores; falha de API, coordenadas inválidas, segundo plano, limpeza e GPS sem chamadas repetidas.');
-  console.log('PASS: regressões de conta/GPS/chat; 24 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
+  console.log('PASS: regressões de conta/GPS/chat; 23 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 

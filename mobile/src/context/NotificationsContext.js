@@ -35,7 +35,7 @@ export function NotificationsProvider({children}){
  const refreshRef=useRef(()=>{});
  const ready=()=>notificationNavigation.isReady();
  const route=()=>ready()?notificationNavigation.getCurrentRoute():null;
- const loggedRoute=()=>route()&&!['Login','Cadastro','RecuperarSenha'].includes(route().name);
+ const loggedRoute=()=>route()&&!['Login','Cadastro'].includes(route().name);
  async function open(data){
   const s=state.current,uid=s.user?.id_usuario,generation=s.generation;
   if(!uid||!ready()||AppState.currentState!=='active'){s.pending=data;return}

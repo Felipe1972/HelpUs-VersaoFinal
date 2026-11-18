@@ -59,7 +59,7 @@ function DemoDetalhesScreen({ navigation }) {
 
 export function MenuScreen({ navigation }) {
   return <Screen title="Help Us" navigation={navigation} back><Text style={ui.section}>CUIDADO, APOIO E COMUNIDADE</Text>
-    {[['home-outline', 'Início', 'Seu mapa e localização', 'Home'], ['chatbubbles-outline', 'Conversas', 'Apoio começa com uma conversa', 'Conversas'], ['notifications-outline', 'Avisos e Alertas', 'Acompanhe a comunidade', 'Notificacoes'], ['person-outline', 'Meu perfil', 'Seus dados e sua conta', 'Perfil'], ['people-outline', 'Usuários', 'Lista de usuários cadastrados', 'Usuarios']].map(([icon, title, subtitle, route]) => <ListRow key={route} {...{ icon, title, subtitle }} onPress={() => goMain(navigation, route)} />)}
+    {[['home-outline', 'Início', 'Seu mapa e localização', 'Home'], ['chatbubbles-outline', 'Conversas', 'Apoio começa com uma conversa', 'Conversas'], ['notifications-outline', 'Avisos e Alertas', 'Acompanhe a comunidade', 'Notificacoes'], ['person-outline', 'Meu perfil', 'Seus dados e sua conta', 'Perfil']].map(([icon, title, subtitle, route]) => <ListRow key={route} {...{ icon, title, subtitle }} onPress={() => goMain(navigation, route)} />)}
     <Button title="Solicitar ajuda" onPress={() => navigation.navigate('SolicitarAjuda')} />
     <Button title="Emergência · SOS" tone="red" onPress={() => navigation.navigate('SOS')} />
   </Screen>;

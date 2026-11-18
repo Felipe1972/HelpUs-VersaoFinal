@@ -135,19 +135,6 @@ async function obterUsuarioLogado(request, response) {
   }
 }
 
-async function listar(request, response) {
-  try {
-    const atual = await usuarioService.buscarPorId(request.usuario.id_usuario);
-    if (!atual || atual.status_verificacao === 'bloqueado') return response.status(403).json({ mensagem: 'Usuário indisponível.' });
-    const usuarios = await usuarioService.listarUsuarios();
-
-    return response.status(200).json({ usuarios });
-  } catch (error) {
-    console.error('Erro ao listar usuários:', error.message);
-    return response.status(500).json({ mensagem: 'Erro interno do servidor' });
-  }
-}
-
 async function trocarSenha(request, response) {
   try {
     const { senhaAtual, novaSenha, confirmarNovaSenha } = request.body;
@@ -234,7 +221,6 @@ module.exports = {
   cadastrar,
   login,
   obterUsuarioLogado,
-  listar,
   trocarSenha,
   excluirConta,
 };

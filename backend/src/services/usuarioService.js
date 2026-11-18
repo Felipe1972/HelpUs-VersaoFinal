@@ -68,11 +68,6 @@ async function deletarPorId(idUsuario) {
   return resultado.affectedRows === 1;
 }
 
-async function listarUsuarios() {
-  const [usuarios] = await pool.execute('SELECT id_usuario,nome,eh_voluntario FROM usuario ORDER BY id_usuario ASC');
-  return usuarios.map(usuario => ({ id_usuario: usuario.id_usuario, nome: usuario.nome, eh_voluntario: Number(usuario.eh_voluntario) === 1 }));
-}
-
 async function criarUsuario({ nome, email, senhaHash, telefone, ehVoluntario }) {
   const [resultado] = await pool.execute(
     `INSERT INTO usuario (nome, email, senha_hash, telefone, eh_voluntario, tipo_usuario)
@@ -100,7 +95,7 @@ module.exports = {
   buscarPorEmail,
   buscarPorId,
   buscarCompletoPorId,
-  listarUsuarios,
+
   criarUsuario,
   atualizarSenha,
   deletarPorId,

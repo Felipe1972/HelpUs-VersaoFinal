@@ -88,13 +88,13 @@ async function run() {
     for (const url of ['/ocorrencias', '/usuarios']) assert.equal((await request('GET', url, c.token)).status, 403);
     await pool.execute("UPDATE usuario SET status_verificacao='pendente' WHERE id_usuario=?", [c.id_usuario]);
     for (const user of [a,b,c]) {
-      const list = await request('GET', '/usuarios', user.token); assert.equal(list.status, 200);
-      for(const u of list.data.usuarios) assert.deepEqual(Object.keys(u).sort(), ['eh_voluntario','id_usuario','nome']);
+      const list = await request('GET', '/usuarios', user.token); assert.equal(list.status, 403);
+
     }
     assert.equal((await request('GET','/ocorrencias',null)).status,401);
     assert.equal((await request('GET','/ocorrencias?escopo=invalido',a.token)).status,400);
     assert.equal((await request('POST','/ocorrencias',a.token,{...body,id_solicitante:b.id_usuario})).status,400);
-    report.testes.push('Perfil relido no banco com o mesmo JWT; claims e query adulterados não promovem usuário; bloqueio; lista sem contatos; autoria forjada rejeitada');
+    report.testes.push('Perfil relido no banco com o mesmo JWT; claims e query adulterados não promovem usuário; bloqueio; diretório bloqueado; autoria forjada rejeitada');
     // Regressão somente leitura usando vínculo de teste anterior, sem fabricar aceite no app.
     const fixture = JSON.parse(fs.readFileSync('.chat-test.local.json','utf8'));
     const existing = [];

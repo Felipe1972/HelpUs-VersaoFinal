@@ -11,7 +11,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import CadastroScreen from '../screens/CadastroScreen';
 import PerfilScreen from '../screens/PerfilScreen';
-import UsuariosScreen from '../screens/UsuariosScreen';
 import TrocarSenhaScreen from '../screens/TrocarSenhaScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PedidosScreen, { MeusPedidosScreen } from '../screens/PedidosScreen';
@@ -59,11 +58,7 @@ export default function AppNavigator() {
           component={PerfilScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
-          name="Usuarios"
-          component={UsuariosScreen}
-          options={{ headerShown: false }}
-        />
+
         <Stack.Screen
           name="TrocarSenha"
           component={TrocarSenhaScreen}

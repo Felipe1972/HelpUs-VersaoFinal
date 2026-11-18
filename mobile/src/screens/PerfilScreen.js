@@ -127,7 +127,6 @@ export default function PerfilScreen({ navigation }) {
       {usuario?.eh_voluntario&&<View style={ui.row}><Text style={ui.label}>Disponível para ajudar</Text><Switch accessibilityLabel="Disponível para ajudar" value={!!usuario.disponivel} onValueChange={async disponivel=>{try{await api.put('/minha-disponibilidade',{disponivel});setUsuario(u=>({...u,disponivel}))}catch{Alert.alert('Não foi possível atualizar a disponibilidade.')}}}/></View>}
       <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="create-outline" title="Editar perfil" onPress={()=>navigation.navigate('EditarPerfil')}/><ListRow icon="people-outline" title="Meus contatos de emergência" onPress={()=>navigation.navigate('ContatosEmergencia')}/><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
       <ListRow icon="notifications-outline" title="Permissão de notificações" onPress={()=>navigation.navigate('NotificationSettings')} />
-      <ListRow icon="people-outline" title="Ver usuários" onPress={() => navigation.navigate('Usuarios')} />
       <ListRow icon="lock-closed-outline" title="Trocar senha" onPress={() => navigation.navigate('TrocarSenha')} />
       <Button title="Sair da conta" tone="soft" onPress={sair} />
       <Button title={excluindo ? 'Excluindo...' : 'Excluir conta'} tone="red" disabled={excluindo} onPress={confirmarExclusao} />

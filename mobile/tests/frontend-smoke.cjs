@@ -124,7 +124,7 @@ function componentRegression() {
   componentRegression();
   reset();
   const routes = nodes(render(load('navigation/AppNavigator').default)).filter(n => n.type === 'Route').map(n => n.props.name);
-  assert.equal(new Set(routes).size, 23);
+  assert.equal(new Set(routes).size, 22);
   for (const file of ['screens/CommunityScreens', 'screens/ChatScreens']) {
     for (const component of Object.values(load(file))) {
       reset();
@@ -183,17 +183,14 @@ function componentRegression() {
   assert.equal(calls[0][1], '/usuarios/me/senha');
   assert.equal(calls[0][2].novaSenha, 'new-password');
 
-  reset();
-  render(load('screens/UsuariosScreen').default);
-  effects[0](); await tick();
-  assert.equal(calls[0][1], '/usuarios');
+
 
   reset([{ nome: 'Teste', email: 'teste@example.test' }, false, false, 0]);
   const profile = render(load('screens/PerfilScreen').default);
   const actions = nodes(profile);
-  actions.find(n => n.props?.title === 'Ver usuários').props.onPress();
+  assert(!actions.some(n => n.props?.title === 'Ver usuários'));
   actions.find(n => n.props?.title === 'Trocar senha').props.onPress();
-  assert(calls.some(c => c[1] === 'Usuarios'));
+
   assert(calls.some(c => c[1] === 'TrocarSenha'));
   actions.find(n => n.props?.title === 'Excluir conta').props.onPress();
   assert(!calls.some(c => c[0] === 'delete'), 'Deletion requires confirmation');
@@ -359,6 +356,6 @@ function componentRegression() {
  console.log('PASS: contatos renderizados com confirmação de exclusão; perfil público sem avaliação fictícia.');
  console.log('PASS: geocodificação/erro, confirmação e alteração de endereço; acompanhamento remove dados revogados e confirma cancelamento.');
   console.log('PASS: polling mantém câmera, mapa e marcadores; falha de API, coordenadas inválidas, segundo plano, limpeza e GPS sem chamadas repetidas.');
-  console.log('PASS: regressões de conta/GPS/chat; 23 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
+  console.log('PASS: regressões de conta/GPS/chat; 22 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 

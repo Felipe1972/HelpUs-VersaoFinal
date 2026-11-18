@@ -1,6 +1,6 @@
 # Front-end e navegação — Help Us
 
-Atualização: SOS agora cria pedidos reais e a Home carrega marcadores da API. Veja [OCORRENCIAS.md](../OCORRENCIAS.md) para o fluxo atual; as referências abaixo a SOS simulado descrevem a etapa anterior.
+Atualização: SOS agora cria pedidos reais e a Home carrega marcadores da API. Veja [OCORRENCIAS.md](../docs/OCORRENCIAS.md) para o fluxo atual; as referências abaixo a SOS simulado descrevem a etapa anterior.
 
 Referência: Figma `Mx6cfp0sHXCrIrzGxvQfjd`, página 0:1. As seis telas desenhadas são Login, Home, Avisos e Alertas, Alerta de Emergência, mapa da ocorrência e detalhes da ocorrência. Chat, menu, favoritos, SOS e recuperação de acesso complementam os fluxos com a mesma identidade visual. A moldura de iPhone do Figma não faz parte da interface.
 
@@ -11,7 +11,7 @@ cd "/c/Users/Usuario/Desktop/HelpUsTeste/mobile"
 npx expo start --clear
 ```
 
-Use Expo Go compatível com SDK 54 e leia o QR code desta execução. Se houver outro Metro, encerre-o ou use a porta alternativa e leia o novo QR code. Computador e celular precisam alcançar a mesma rede. Mantenha a API em execução para os recursos reais de conta e chat; `EXPO_PUBLIC_API_URL` deve apontar para ela. A etapa posterior do chat passou a usar `help_us2`; veja [CHAT.md](../CHAT.md).
+Use Expo Go compatível com SDK 54 e leia o QR code desta execução. Se houver outro Metro, encerre-o ou use a porta alternativa e leia o novo QR code. Computador e celular precisam alcançar a mesma rede. Mantenha a API em execução para os recursos reais de conta e chat; `EXPO_PUBLIC_API_URL` deve apontar para ela. A etapa posterior do chat passou a usar `help_us2`; veja [CHAT.md](../docs/CHAT.md).
 
 ## Telas e caminhos
 
@@ -64,7 +64,7 @@ O smoke test simula React, componentes nativos, GPS e serviços: verifica rotas,
 1. Entrar com conta de teste. Confirmar abertura da Home, mapa e título “Você está aqui” ao tocar no marcador com GPS permitido.
 2. Alternar entre as quatro abas e voltar à Home. Testar menu e coração, inclusive botão Voltar do Android.
 3. Abrir os quatro avisos. Seguir Emergência → mapa → detalhes; aceitar/recusar, favoritar e abrir Favoritos. Remover o favorito e conferir o estado vazio.
-4. Seguir o teste com duas contas em [CHAT.md](../CHAT.md). Abrir o teclado e verificar se o campo continua acessível. Voltar às conversas e reabrir o chat; o histórico deve permanecer no banco.
+4. Seguir o teste com duas contas em [CHAT.md](../docs/CHAT.md). Abrir o teclado e verificar se o campo continua acessível. Voltar às conversas e reabrir o chat; o histórico deve permanecer no banco.
 5. Abrir SOS, preencher a mensagem e simular o envio. Confirmar o aviso explícito de que ninguém foi notificado.
 6. No Perfil, testar Home, lista, troca de senha e logout com API disponível. Para testar exclusão, criar uma conta descartável, pois esta ação continua real.
 7. Sair e cadastrar uma conta de teste. Fazer novo login e confirmar que os dados demonstrativos da sessão anterior foram reiniciados.

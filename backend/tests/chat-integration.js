@@ -156,7 +156,7 @@ async function run() {
 
     // Regressão HTTP sem exclusão de contas reais.
     assert.equal((await request('GET', '/usuarios/me', a.token)).data.usuario.eh_voluntario, true);
-    assert.equal((await request('GET', '/usuarios', a.token)).status, 200);
+    assert.equal((await request('GET', '/usuarios', a.token)).status, 403);
     const change = await request('PUT', '/usuarios/me/senha', d.token, { senhaAtual: password, novaSenha: password + '2', confirmarNovaSenha: password + '2' });
     assert.equal(change.status, 200);
     assert.equal((await request('POST', '/usuarios/login', null, { email: d.email, senha: password + '2' })).status, 200);

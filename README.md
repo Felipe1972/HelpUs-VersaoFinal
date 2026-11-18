@@ -5,10 +5,13 @@ Aplicativo acadêmico de ajuda comunitária. React Native/Expo SDK58, Node.js/Ex
 ## Estrutura e arquitetura
 - mobile/src: screens, components, navigation, context, hooks e services.
 - backend/src: routes, controllers, services, middlewares, config e websocket.
-- database: SQL e DER. backend/scripts: migrações controladas, não reaplicar.
-- backend/tests e mobile/tests: testes; docs: documentação e checkpoints históricos.
+- database: SQL; DER consolidado em docs/BANCO-DE-DADOS.md. backend/scripts: migrações controladas, não reaplicar.
+- backend/tests e mobile/tests: testes; docs: documentação técnica consolidada.
 
 REST e WebSocket compartilham porta3000. JWT identifica conta, servidor relê permissões; WebSocket exige auth antes de mensagens. Aceite usa transação/travas. Consentimento libera posição exata. Contatos privados só pertencem ao proprietário. Diretório geral desabilitado.
+
+## Instalação em uma cópia nova
+Preserve os lockfiles. No backend execute npm ci; no mobile ative primeiro o Node portátil e execute npm ci. Configure os .env locais com credenciais próprias e EXPO_PUBLIC_API_URL apontando para a API. O banco existente help_us2 já está preparado: não reaplique migrações. Nunca versionar senhas ou backups.
 
 ## Iniciar manualmente no VS Code / Git Bash
 Abra Desktop/HelpUsTeste e inicie MySQL.
@@ -28,7 +31,6 @@ Mobile com Node portátil: npm test, npm run check:syntax, npx expo-doctor, npm 
 ## Apresentar arquitetura
 Tela chama REST com JWT; servidor autoriza e persiste em MySQL; aceite coordena atendimento; chat autentica via WebSocket; consentimento controla localização. Mostre AppNavigator, routes/services, websocket e database.
 
-[Funcionalidades](docs/FUNCIONALIDADES-IMPLEMENTADAS.md) · [Roteiro](docs/ROTEIRO-APRESENTACAO.md) · [Banco](docs/BANCO-DADOS-ATUAL.md) · [Limpeza por IDs](docs/LIMPEZA-DADOS.md) · [Checklist](docs/CHECKLIST-TESTES-FINAIS.md).
-Backups privados em .private-backups (ignorados pelo Git). Documentos antigos são checkpoints históricos.
+[Arquitetura](docs/ARQUITETURA.md) · [Banco de dados](docs/BANCO-DE-DADOS.md) · [Funcionalidades](docs/FUNCIONALIDADES.md).
 
-Resultados e credenciais locais de testes ficam em .private-backups/execucoes-testes, fora do Git. Consulte [arquivamento](docs/ARQUIVAMENTO-TESTES.md). Os testes de integração usam esse caminho automaticamente.
+Originais históricos íntegros em .private-backups/documentacao-historica/2026-11-18, separados por pasta de origem; manifesto SHA256 privado. Resultados e credenciais de testes ficam em .private-backups/execucoes-testes. Ambas as pastas são ignoradas pelo Git.

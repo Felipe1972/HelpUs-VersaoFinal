@@ -11,7 +11,7 @@ function harness({denied=false,cold=false}={}){
  function load(relative){const file=path.resolve(__dirname,'../src',relative);const code=babel.transformSync(fs.readFileSync(file,'utf8'),{babelrc:false,configFile:false,plugins:[['@babel/plugin-transform-react-jsx',{runtime:'automatic'}],'@babel/plugin-transform-modules-commonjs']}).code;const module={exports:{}};const requireMock=n=>{
  if(n==='react')return react;if(n==='react/jsx-runtime')return{jsx:(type,props)=>({type,props})};if(n==='react-native')return native;if(n==='expo-notifications')return notifications;
  if(n==='@react-navigation/native')return{createNavigationContainerRef:()=>nav};if(n==='@react-native-async-storage/async-storage')return{getItem:async k=>store.has(k)?store.get(k):null,setItem:async(k,v)=>store.set(k,v)};
- if(n.endsWith('/authStorage'))return{buscarUsuarioSalvo:async()=>me,subscribeSession:fn=>{subscription=fn;return()=>{}}};if(n.endsWith('/api'))return{__esModule:true,default:api};if(n.endsWith('/notificationPolicy'))return load('services/notificationPolicy.js');throw Error(n)};
+ if(n.endsWith('/authStorage'))return{buscarUsuarioSalvo:async()=>me,subscribeSession:fn=>{subscription=fn;return()=>{}}};if(n.endsWith('/api'))return{__esModule:true,default:api};if(n.endsWith('/reminders'))return{reconcileReminders:async()=>{}};if(n.endsWith('/notificationPolicy'))return load('services/notificationPolicy.js');throw Error(n)};
  vm.runInNewContext('(function(require,module,exports){'+code+'\n})',{console,Date,Promise,setInterval:fn=>{intervals.push(fn);return fn},clearInterval:()=>{}})(requireMock,module,module.exports);return module.exports;
  }
  const mod=load('context/NotificationsContext.js');

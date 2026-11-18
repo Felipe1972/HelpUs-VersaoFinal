@@ -5,9 +5,9 @@ async function create(db,uid,oid,type,title,conversation=null){
 }
 async function opportunities(db,oid,author){
  // Não há região confiável de atuação de todos os voluntários. Sem GPS contínuo.
- await db.execute("INSERT INTO notificacao_privada(id_usuario,id_ocorrencia,tipo,titulo) SELECT id_usuario,?,'novo_pedido','Novo pedido de ajuda' FROM usuario WHERE eh_voluntario=1 AND status_verificacao<>'bloqueado' AND id_usuario<>?",[oid,author]);
+ await db.execute("INSERT INTO notificacao_privada(id_usuario,id_ocorrencia,tipo,titulo) SELECT id_usuario,?,'novo_pedido','Novo pedido de ajuda' FROM usuario WHERE eh_voluntario=1 AND disponivel=1 AND status_verificacao<>'bloqueado' AND id_usuario<>?",[oid,author]);
 }
-const visible="n.id_usuario=? AND (n.tipo<>'novo_pedido' OR (u.eh_voluntario=1 AND o.id_solicitante<>u.id_usuario AND o.status='aberta' AND o.aguarda_reabertura=0 AND NOT EXISTS(SELECT 1 FROM atendimento a WHERE a.id_ocorrencia=o.id_ocorrencia AND a.id_voluntario=u.id_usuario AND a.id_atendimento=(SELECT MAX(last_a.id_atendimento) FROM atendimento last_a WHERE last_a.id_ocorrencia=o.id_ocorrencia AND last_a.id_voluntario=u.id_usuario) AND (a.status='desistiu' OR (a.status='recusado' AND a.recusa_desfeita_em IS NULL)))))";
+const visible="n.id_usuario=? AND (n.tipo<>'novo_pedido' OR (u.eh_voluntario=1 AND u.disponivel=1 AND o.id_solicitante<>u.id_usuario AND o.status='aberta' AND o.aguarda_reabertura=0 AND NOT EXISTS(SELECT 1 FROM atendimento a WHERE a.id_ocorrencia=o.id_ocorrencia AND a.id_voluntario=u.id_usuario AND a.id_atendimento=(SELECT MAX(last_a.id_atendimento) FROM atendimento last_a WHERE last_a.id_ocorrencia=o.id_ocorrencia AND last_a.id_voluntario=u.id_usuario) AND (a.status='desistiu' OR (a.status='recusado' AND a.recusa_desfeita_em IS NULL)))))";
 const from=' FROM notificacao_privada n JOIN usuario u ON u.id_usuario=n.id_usuario JOIN ocorrencia o ON o.id_ocorrencia=n.id_ocorrencia WHERE '+visible;
 async function list(uid){
  const [rows]=await pool.execute('SELECT n.id_notificacao,n.id_ocorrencia,n.id_conversa,n.tipo,n.titulo,n.lida_em,n.criada_em'+from+' ORDER BY (n.lida_em IS NULL) DESC,n.id_notificacao DESC LIMIT 100',[uid]);

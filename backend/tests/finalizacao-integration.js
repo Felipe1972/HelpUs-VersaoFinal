@@ -23,7 +23,16 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  await req('POST','/ocorrencias',owner,{...body,endereco:{...addr,sem_numero:true,referencia:''}},400);
  await req('POST','/ocorrencias',owner,{...body,endereco:{...addr,latitude:0}},400);
  await req('PUT','/meu-endereco',owner,addr);assert.equal((await req('GET','/meu-endereco',stranger)).endereco,null);
- const id=await create();await req('PUT','/meu-endereco',owner,{...addr,rua:'Outro endereço'});assert.equal((await detail(id,owner)).endereco.rua,addr.rua);
+ await req('PUT','/minha-disponibilidade',owner,{disponivel:false},403);
+ await req('PUT','/minha-disponibilidade',v1,{disponivel:'false'},400);
+ await req('PUT','/minha-disponibilidade',v1,{disponivel:false});
+ const id=await create();
+ assert.equal((await req('GET','/usuarios/me',v1)).usuario.disponivel,0);
+ assert.equal((await req('GET','/ocorrencias?escopo=disponiveis',v1)).ocorrencias.length,0);
+ await act(id,v1,'aceitar',{},403);
+ assert(!(await req('GET','/notificacoes',v1)).notificacoes.some(n=>n.tipo==='novo_pedido'&&n.id_ocorrencia===id));
+ await req('PUT','/minha-disponibilidade',v1,{disponivel:true});
+ await req('PUT','/meu-endereco',owner,{...addr,rua:'Outro endereço'});assert.equal((await detail(id,owner)).endereco.rua,addr.rua);
  await req('DELETE','/meu-endereco',owner);assert.equal((await req('GET','/meu-endereco',owner)).endereco,null);assert.equal((await detail(id,owner)).endereco.rua,addr.rua);
  await req('PUT','/meu-endereco',owner,addr);
  report.testes.push('Endereço privado, validações, versionamento e snapshot imutável do pedido');
@@ -50,8 +59,11 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  await Promise.all([act(id,winner,'cheguei'),act(id,winner,'cheguei')]);assert((await detail(id,owner)).acompanhamento.deslocamento.chegou_em);assert.equal((await detail(id,owner)).status,'em_atendimento');await act(id,winner,'previsao',{minutos:5},400);
  const travelNotices=(await req('GET','/notificacoes',owner)).notificacoes;for(const type of ['a-caminho','previsao','cheguei'])assert.equal(travelNotices.filter(n=>n.tipo===type&&n.id_ocorrencia===id).length,1);
  report.testes.push('Destino exclusivo com consentimento/revogação; saída/previsão/chegada persistidas, autorização e duplicação concorrente; chegada não finaliza');
+ await req('PUT','/minha-disponibilidade',winner,{disponivel:false});
+ assert((await req('GET','/ocorrencias?escopo=assumidos',winner)).ocorrencias.some(o=>o.id_ocorrencia===id));
  const claims={id_usuario:winner.id_usuario,exp:Math.floor(Date.now()/1000)+600},event={type:'chat_message',request_id:'final-'+run,text:'Mensagem persistida de teste',id_ocorrencia:id,id_destinatario:owner.id_usuario};
- const m=await chat.saveMessage(claims,event);const repeated=await chat.saveMessage(claims,event);assert.equal(m.id_mensagem,repeated.id_mensagem);
+ const m=await chat.saveMessage(claims,event);await req('PUT','/minha-disponibilidade',winner,{disponivel:true});const repeated=await chat.saveMessage(claims,event);assert.equal(m.id_mensagem,repeated.id_mensagem);
+ const cs=(await req('GET','/conversas',owner)).conversas.find(c=>c.id_ocorrencia===id);assert.equal(cs.nao_lidas,1);await req('POST','/conversas/'+cs.id_conversa+'/lidas',stranger,{ids:[m.id_mensagem]},403);await req('POST','/conversas/'+cs.id_conversa+'/lidas',owner,{ids:[m.id_mensagem]});assert.equal((await req('GET','/conversas',owner)).conversas.find(c=>c.id_conversa===cs.id_conversa).nao_lidas,0);
  await act(id,owner,'revogar',{id_atendimento:aid});await req('GET','/ocorrencias/'+id+'/destino',winner,null,403);const hidden=await detail(id,winner);assert.equal(hidden.endereco,null);assert.equal(hidden.descricao,null);assert.notEqual(hidden.latitude,addr.latitude);
  await act(id,owner,'compartilhar',{id_atendimento:aid});await act(id,winner,'solicitar-conclusao');assert((await detail(id,owner)).acompanhamento.conclusao_solicitada);
  await act(id,owner,'rejeitar-conclusao');assert(!(await detail(id,owner)).acompanhamento.conclusao_solicitada);await act(id,winner,'solicitar-conclusao');
@@ -78,6 +90,7 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  const rating=(await req('GET','/usuarios/me',winner)).usuario.reputacao;assert.equal(rating.media,5);assert.equal(rating.quantidade,1);
  report.testes.push('Disputa desistência/conclusão com um único vencedor; consentimento concorrente consistente; média de avaliação conferida');
  const demo=await create({descricao_publica:'Demonstração final — pedido disponível',modalidade_horario:'agendado',necessaria_em:new Date(Date.now()+86400000).toISOString()});report.pedido_demonstracao=demo;
+ await act(demo,v1,'aceitar');const reminders=(await req('GET','/lembretes',owner)).lembretes;const reminder=reminders.find(r=>r.id_ocorrencia===demo);assert(reminder);assert((await req('GET','/lembretes',v1)).lembretes.some(r=>r.id_atendimento===reminder.id_atendimento));await req('GET','/lembretes/'+reminder.id_atendimento+'/abrir',stranger,null,404);await act(demo,owner,'cancelar');assert(!(await req('GET','/lembretes',v1)).lembretes.some(r=>r.id_ocorrencia===demo));
  report.testes.push('Cancelamento x compartilhamento/aceite serializados, terminal sem acesso privado, vínculos legados ambíguos protegidos');
  console.log('PASS:',report.testes.join('; '));
  } finally {

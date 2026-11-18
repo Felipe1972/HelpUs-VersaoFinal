@@ -3,7 +3,7 @@ const pool = require('../config/database');
 async function buscarPorEmail(email) {
   const [usuarios] = await pool.execute(
     `SELECT id_usuario, nome, email, senha_hash, telefone, tipo_usuario,
-            eh_voluntario, status_verificacao, criado_em
+            eh_voluntario, disponivel, status_verificacao, criado_em
        FROM usuario
       WHERE email = ?
       LIMIT 1`,
@@ -16,7 +16,7 @@ async function buscarPorEmail(email) {
 async function buscarPorId(idUsuario) {
   const [usuarios] = await pool.execute(
     `SELECT id_usuario, nome, email, telefone, tipo_usuario,
-            eh_voluntario, status_verificacao, criado_em
+            eh_voluntario, disponivel, status_verificacao, criado_em
        FROM usuario
       WHERE id_usuario = ?
       LIMIT 1`,
@@ -40,7 +40,7 @@ async function buscarPorId(idUsuario) {
 async function buscarCompletoPorId(idUsuario) {
   const [usuarios] = await pool.execute(
     `SELECT id_usuario, nome, email, senha_hash, telefone, tipo_usuario,
-            eh_voluntario, status_verificacao, criado_em
+            eh_voluntario, disponivel, status_verificacao, criado_em
        FROM usuario
       WHERE id_usuario = ?
       LIMIT 1`,
@@ -82,7 +82,7 @@ async function criarUsuario({ nome, email, senhaHash, telefone, ehVoluntario }) 
 
   const [usuarios] = await pool.execute(
     `SELECT id_usuario, nome, email, telefone, tipo_usuario,
-            eh_voluntario, status_verificacao, criado_em
+            eh_voluntario, disponivel, status_verificacao, criado_em
        FROM usuario
       WHERE id_usuario = ?`,
     [resultado.insertId],

@@ -3,7 +3,7 @@ const {randomUUID}=require('crypto');
 class AtendimentoError extends Error {constructor(message,status=400){super(message);this.status=status}}
 async function context(db,id,uid,lock=false){
  const [[o]]=await db.execute('SELECT * FROM ocorrencia WHERE id_ocorrencia=?'+(lock?' FOR UPDATE':''),[id]);
- const [[u]]=await db.execute('SELECT id_usuario,eh_voluntario,status_verificacao FROM usuario WHERE id_usuario=?',[uid]);
+ const [[u]]=await db.execute('SELECT id_usuario,eh_voluntario,disponivel,status_verificacao FROM usuario WHERE id_usuario=?'+(lock?' FOR UPDATE':''),[uid]);
  if(!u||u.status_verificacao==='bloqueado')throw new AtendimentoError('Usuário indisponível.',403);
  if(!o)throw new AtendimentoError('Pedido não encontrado.',404);
  const [a]=await db.execute('SELECT * FROM atendimento WHERE id_ocorrencia=? ORDER BY id_atendimento DESC',[id]);
@@ -26,6 +26,7 @@ async function action(uid,id,kind){
  const mine=accepted.find(x=>x.id_voluntario===uid);
  if(kind==='aceitar'&&mine&&o.status==='em_atendimento'){const r=await ensureConversation(db,o,uid);await db.commit();return r}
  if(kind==='conversas'&&mine&&['aberta','em_atendimento'].includes(o.status)){const r=await ensureConversation(db,o,uid);await db.commit();return r}
+ if(Number(u.disponivel)===0&&['aceitar','conversas'].includes(kind))throw new AtendimentoError('Ative Disponível para ajudar no perfil.',403);
  if(o.status!=='aberta'||accepted.length||o.aguarda_reabertura)throw new AtendimentoError('Pedido indisponível ou já assumido. Atualize a lista.',409);
  if(latest?.status==='desistiu')throw new AtendimentoError('Você desistiu deste pedido. O histórico permanece disponível.',409);
  if(refused&&!['recusar','desfazer-recusa'].includes(kind))throw new AtendimentoError('Desfaça a recusa antes de continuar.',403);

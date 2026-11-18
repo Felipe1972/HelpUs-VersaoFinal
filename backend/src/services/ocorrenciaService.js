@@ -5,7 +5,7 @@ class OcorrenciaError extends Error {
   constructor(message, status = 400) { super(message); this.status = status; }
 }
 async function usuarioAtivo(id) {
-  const [rows] = await pool.execute('SELECT id_usuario, eh_voluntario, status_verificacao FROM usuario WHERE id_usuario=?', [id]);
+  const [rows] = await pool.execute('SELECT id_usuario, eh_voluntario, disponivel, status_verificacao FROM usuario WHERE id_usuario=?', [id]);
   if (!rows.length || rows[0].status_verificacao === 'bloqueado') throw new OcorrenciaError('Usuário indisponível.', 403);
   return rows[0];
 }
@@ -46,7 +46,7 @@ async function decorate(user,row){
  const c=await require('./atendimentoService').context(pool,row.id_ocorrencia,user.id_usuario);
  const meta=await require('./acompanhamentoService').metadata(pool,c,user.id_usuario);
  const result=permissoes.dto(user,{...row,privado_autorizado:meta.privado}),mine=c.accepted.some(a=>a.id_voluntario===user.id_usuario);
- const eligible=permissoes.voluntario(user)&&!result.meu_pedido&&row.status==='aberta'&&!c.accepted.length&&!row.aguarda_reabertura&&c.latest?.status!=='desistiu';
+ const eligible=Number(user.disponivel)!==0&&permissoes.voluntario(user)&&!result.meu_pedido&&row.status==='aberta'&&!c.accepted.length&&!row.aguarda_reabertura&&c.latest?.status!=='desistiu';
  return {...result,acompanhamento:meta.acompanhamento,endereco:meta.privado?row.endereco_snapshot:null,descricao_publica:row.descricao_publica||'Pedido de ajuda: '+row.nome_tipo,modalidade_horario:row.modalidade_horario,necessaria_em:row.necessaria_em,fuso_horario:row.fuso_horario,recusado:!!c.refused,pode_aceitar:eligible&&!c.refused,pode_recusar:eligible&&!c.refused,pode_desfazer_recusa:eligible&&!!c.refused,pode_conversar:mine||eligible&&!c.refused,assumido:mine,elegivel_para_aceite_futuro:eligible&&!c.refused};
 }
 async function listar(user,escopo='mapa'){

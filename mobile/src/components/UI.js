@@ -40,11 +40,11 @@ export function Header({ title, navigation, back = false, auth = false }) {
 
 const tabs = [['Home', 'home-outline', 'Início'], ['Conversas', 'chatbubble-outline', 'Chat'], ['Notificacoes', 'notifications-outline', 'Avisos'], ['Perfil', 'person-outline', 'Perfil']];
 export function BottomBar({ navigation, active }) {
-  const {unread}=useNotifications();
+  const {unread,chatUnread=0}=useNotifications();
   const insets = useSafeAreaInsets();
-  return <View style={[s.bottom, { paddingBottom: Math.max(insets.bottom, 8) }]}>{tabs.map(([route, icon, label]) => <Pressable key={route} accessibilityRole="tab" accessibilityLabel={label+(route==='Notificacoes'&&unread?' · '+unread+' avisos não lidos':'')} accessibilityState={{ selected: active === route }} onPress={() => goMain(navigation, route)} style={({ pressed }) => [s.tab, pressed && s.pressed]}>
+  return <View style={[s.bottom, { paddingBottom: Math.max(insets.bottom, 8) }]}>{tabs.map(([route, icon, label]) => <Pressable key={route} accessibilityRole="tab" accessibilityLabel={label+(route==='Conversas'&&chatUnread?' · '+chatUnread+' mensagens não lidas':'')+(route==='Notificacoes'&&unread?' · '+unread+' avisos não lidos':'')} accessibilityState={{ selected: active === route }} onPress={() => goMain(navigation, route)} style={({ pressed }) => [s.tab, pressed && s.pressed]}>
     <Ionicons name={icon} size={27} color={active === route ? colors.blue : colors.ink} />
-    {route==='Notificacoes'&&unread>0&&<View style={{position:'absolute',top:-4,right:'22%',backgroundColor:colors.red,borderRadius:10,minWidth:18,paddingHorizontal:4,alignItems:'center'}}><Text style={{color:'white',fontSize:10,fontWeight:'700'}}>{unread>99?'99+':unread}</Text></View>}
+    {(route==='Notificacoes'?unread:route==='Conversas'?chatUnread:0)>0&&<View style={{position:'absolute',top:-4,right:'22%',backgroundColor:colors.red,borderRadius:10,minWidth:18,paddingHorizontal:4,alignItems:'center'}}><Text style={{color:'white',fontSize:10,fontWeight:'700'}}>{(route==='Conversas'?chatUnread:unread)>99?'99+':(route==='Conversas'?chatUnread:unread)}</Text></View>}
     <Text style={[s.tabLabel, active === route && { color: colors.blue }]}>{label}</Text>
   </Pressable>)}</View>;
 }

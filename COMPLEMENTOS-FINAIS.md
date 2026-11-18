@@ -6,9 +6,9 @@ Projeto Desktop/HelpUsTeste. Alterações anteriores preservadas. Sem push.
 - [x] Copiar endereço
 - [x] Deslocamento e chegada
 - [x] Previsão
-- [ ] Lembretes
-- [ ] Mensagens não lidas
-- [ ] Disponibilidade
+- [x] Lembretes
+- [x] Mensagens não lidas
+- [x] Disponibilidade
 - [ ] Distância
 - [ ] Perfil público
 - [ ] Editar perfil
@@ -34,3 +34,7 @@ Prioridades 2–4 ainda pendentes: não foram implementados lembretes, mensagens
 Backend: 8 testes unitários, integração completa finalizacao e autorização da API em execução aprovados. Mobile: 11 testes, smoke/renderização e sintaxe/escopo aprovados. Bundles Android/iOS gerados. Doctor 19/20: somente patch Expo esperado 58.0.26 versus instalado 58.0.25; não atualizado por restrição. API confirmada/reiniciada: Desktop/HelpUsTeste/backend/server.js, PID 5624, porta 3000. Prioridades 2–4 e validação final dessas prioridades continuam pendentes.
 
 Commit local do conjunto estável: aa1fc1f. Inclui a implementação de notificações já existente e as quatro primeiras funções dos complementos. Sem push. Retomar pela etapa 5 (lembretes), sem repetir a migração de deslocamento.
+
+Retomada: lembretes e leitura validados em integração (usuários 79–82); testes de reconciliação e mobile passaram. Leitura usa mensagem.lida_em opcional, destinatário e IDs visíveis autorizados. Sem mudança no protocolo WebSocket.
+
+Checkpoint etapas 5–7: integração real com usuários 87–90, pedidos 103–109; disponibilidade bloqueia oportunidades/aceite/novos avisos e preserva atendimento/chat. 12 testes mobile + renderização aprovados. Migrações aditivas já aplicadas: mensagem.lida_em DATETIME NULL; usuario.disponivel TINYINT(1) NOT NULL DEFAULT 1. Registros anteriores preservados.

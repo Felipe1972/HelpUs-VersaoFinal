@@ -1,3 +1,4 @@
+import { reconcileReminders } from '../services/reminders';
 import { createContext,useContext,useEffect,useRef,useState } from 'react';
 import { Alert,AppState,Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,7 +15,7 @@ const Context=createContext({unread:0,refresh:async()=>{},open:async()=>{},permi
 export const useNotifications=()=>useContext(Context);
 let foregroundAccount=null;
 Notifications.setNotificationHandler({handleNotification:async n=>{
- const allowed=AppState.currentState==='active'&&n.request.content.data?.accountId===foregroundAccount;
+ const allowed=(AppState.currentState==='active'||n.request.content.data?.tipo==='lembrete')&&n.request.content.data?.accountId===foregroundAccount;
  return{shouldShowBanner:allowed,shouldShowList:allowed,shouldPlaySound:allowed,shouldSetBadge:false};
 }});
 const PERMISSION_KEY='@helpus:notifications:permission-requested';
@@ -29,6 +30,7 @@ export async function notificationPermission(request=false){
 }
 export function NotificationsProvider({children}){
  const [unread,setUnread]=useState(0),[permission,setPermission]=useState('Não consultada');
+ const [chatUnread,setChatUnread]=useState(0);
  const state=useRef({user:null,generation:0,busy:false,pending:null,opening:false,alive:true,candidate:null,cleanup:Promise.resolve()});
  const refreshRef=useRef(()=>{});
  const ready=()=>notificationNavigation.isReady();
@@ -41,9 +43,9 @@ export function NotificationsProvider({children}){
   if(s.opening)return;
   s.opening=true;s.pending=null;
   try{
-   await api.post('/notificacoes/'+data.id_notificacao+'/lida');
+   if(data.tipo!=='lembrete')await api.post('/notificacoes/'+data.id_notificacao+'/lida');
    if(s.generation!==generation||!s.alive)return;
-   const response=await api.get('/notificacoes/'+data.id_notificacao+'/abrir');
+   const response=await api.get(data.tipo==='lembrete'?'/lembretes/'+data.id_atendimento+'/abrir':'/notificacoes/'+data.id_notificacao+'/abrir');
    if(s.generation!==generation||!s.alive)return;
    const destination=response.data;
    if(!['Chat','Conversas','Acompanhamento','OcorrenciaDetalhes'].includes(destination.tela))throw Error('Destino inválido');
@@ -61,6 +63,8 @@ export function NotificationsProvider({children}){
    const {data}=await api.get('/notificacoes');
    if(s.generation!==generation||!s.alive)return;
    setUnread(data.nao_lidas||0);
+   try{const chats=await api.get('/conversas');if(s.generation===generation)setChatUnread(chats.data.conversas.reduce((sum,c)=>sum+(c.nao_lidas||0),0))}catch{}
+   if(s.generation!==generation)return;
    const key='@helpus:notifications:cursor:'+uid;
    const saved=await AsyncStorage.getItem(key);
    if(s.generation!==generation)return;
@@ -72,6 +76,7 @@ export function NotificationsProvider({children}){
    const status=await notificationPermission(true);
    if(s.generation!==generation)return;
    setPermission(status);
+   try{const reminders=await api.get('/lembretes');if(s.generation===generation)await reconcileReminders(Notifications,uid,reminders.data.lembretes,status==='Autorizadas',()=>s.alive&&s.generation===generation)}catch{/* Não remover lembretes em falha de rede. */}
    if(status!=='Autorizadas')return;
    for(const n of batch.show){
     if(s.generation!==generation||AppState.currentState!=='active')break;
@@ -80,7 +85,7 @@ export function NotificationsProvider({children}){
     const identifier=await Notifications.scheduleNotificationAsync({identifier:'helpus-'+uid+'-'+n.id_notificacao,content:notificationContent(n,uid),trigger:Platform.OS==='android'?{channelId:'helpus-events'}:null});
     if(s.generation!==generation){await Notifications.dismissNotificationAsync(identifier);await Notifications.cancelScheduledNotificationAsync(identifier)}
    }
-  }catch(e){if(s.generation===generation&&[401,403].includes(e.response?.status)){setUnread(0);s.user=null;foregroundAccount=null}}
+  }catch(e){if(s.generation===generation&&[401,403].includes(e.response?.status)){setUnread(0);setChatUnread(0);s.user=null;foregroundAccount=null;await Notifications.cancelAllScheduledNotificationsAsync().catch(()=>{})}}
   finally{s.busy=false}
  }
  refreshRef.current=refresh;
@@ -88,7 +93,7 @@ export function NotificationsProvider({children}){
   const s=state.current;s.alive=true;
   async function session(user,initial=false,reason){
    s.candidate=user;
-   const generation=++s.generation;s.user=null;foregroundAccount=null;setUnread(0);
+   const generation=++s.generation;s.user=null;foregroundAccount=null;setUnread(0);setChatUnread(0);
    if(reason==='logout')s.pending=null;
    if(!initial)s.cleanup=s.cleanup.then(async()=>{await Notifications.dismissAllNotificationsAsync().catch(()=>{});await Notifications.cancelAllScheduledNotificationsAsync().catch(()=>{})});
    await s.cleanup;
@@ -111,5 +116,5 @@ export function NotificationsProvider({children}){
   const timer=setInterval(()=>{if(!s.user&&s.candidate&&AppState.currentState==='active')void session(s.candidate,true);else void refreshRef.current()},15000);
   return()=>{s.alive=false;s.generation++;foregroundAccount=null;unsubscribe();sub.remove();app.remove();clearInterval(timer);navigationListener=()=>{}};
  },[]);
- return <Context.Provider value={{unread,permission,refresh,open: n=>open({...n,accountId:state.current.user?.id_usuario})}}>{children}</Context.Provider>;
+ return <Context.Provider value={{unread,chatUnread,permission,refresh,open: n=>open({...n,accountId:state.current.user?.id_usuario})}}>{children}</Context.Provider>;
 }

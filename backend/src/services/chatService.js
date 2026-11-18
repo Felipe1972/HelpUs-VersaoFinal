@@ -93,7 +93,7 @@ async function history(userId, occurrenceId, otherId, before, limit = 50) {
 
 async function conversations(userId){
  await activeUser(userId);const [rows]=await pool.execute('SELECT * FROM conversa WHERE id_solicitante=? OR id_voluntario=?',[userId,userId]);const out=[];
- for(const c of rows){try{const other=c.id_solicitante===userId?c.id_voluntario:c.id_solicitante;const h=await history(userId,c.id_ocorrencia,other,null,1);out.push({...h.conversa,ultima_mensagem:h.mensagens.at(-1)||null})}catch(e){if(!(e instanceof ChatError)&&e.status!==403)throw e}}
+ for(const c of rows){try{const other=c.id_solicitante===userId?c.id_voluntario:c.id_solicitante;const h=await history(userId,c.id_ocorrencia,other,null,1);const [[unread]]=await pool.execute('SELECT COUNT(*) total FROM mensagem WHERE id_ocorrencia=? AND id_destinatario=? AND id_remetente=? AND lida_em IS NULL',[c.id_ocorrencia,userId,other]);out.push({...h.conversa,nao_lidas:Number(unread.total),ultima_mensagem:h.mensagens.at(-1)||null})}catch(e){if(!(e instanceof ChatError)&&e.status!==403)throw e}}
  return out.sort((a,b)=>(b.ultima_mensagem?.id_mensagem||0)-(a.ultima_mensagem?.id_mensagem||0));
 }
 function validateMessage(event) {

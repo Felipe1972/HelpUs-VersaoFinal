@@ -25,7 +25,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "node tests/frontend-smoke.cjs && node --test tests/chat.test.cjs tests/pedido-location.test.cjs tests/notifications.test.cjs tests/destino.test.cjs",
+    "test": "node tests/frontend-smoke.cjs && node --test tests/chat.test.cjs tests/pedido-location.test.cjs tests/notifications.test.cjs tests/destino.test.cjs tests/reminders.test.cjs",
     "check:syntax": "node tests/syntax.cjs",
     "export:android": "expo export --platform android --output-dir dist/android",
     "export:ios": "expo export --platform ios --output-dir dist/ios"

@@ -124,6 +124,7 @@ export default function PerfilScreen({ navigation }) {
         {usuario.eh_voluntario&&<Text style={ui.subtitle}>{usuario.reputacao?usuario.reputacao.media.toFixed(1)+' / 5 · '+usuario.reputacao.quantidade+' avaliações':'Ainda sem avaliações recebidas'}</Text>}
       </Card> : <Card><Text style={ui.subtitle}>Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.</Text><Button style={{ marginTop: 16 }} title="Tentar novamente" onPress={() => setTentativa(value => value + 1)} /></Card>}
       <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
+      <ListRow icon="notifications-outline" title="Permissão de notificações" onPress={()=>navigation.navigate('NotificationSettings')} />
       <ListRow icon="people-outline" title="Ver usuários" onPress={() => navigation.navigate('Usuarios')} />
       <ListRow icon="lock-closed-outline" title="Trocar senha" onPress={() => navigation.navigate('TrocarSenha')} />
       <Button title="Sair da conta" tone="soft" onPress={sair} />

@@ -1,3 +1,5 @@
+import { NotificationsProvider,notificationNavigation,notificationNavigationChanged } from '../context/NotificationsContext';
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import AcompanhamentoScreen from '../screens/AcompanhamentoScreen';
 import MeuEnderecoScreen from '../screens/MeuEnderecoScreen';
 import NotificacoesReaisScreen from '../screens/NotificacoesReaisScreen';
@@ -18,7 +20,7 @@ const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   return (
-    <DemoProvider><NavigationContainer>
+    <DemoProvider><NotificationsProvider><NavigationContainer ref={notificationNavigation} onReady={notificationNavigationChanged} onStateChange={notificationNavigationChanged}>
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
@@ -64,8 +66,8 @@ export default function AppNavigator() {
           component={TrocarSenhaScreen}
           options={{ headerShown: false }}
         />
-        {Object.entries({ Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
+        {Object.entries({ NotificationSettings: NotificationSettingsScreen, Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
-    </NavigationContainer></DemoProvider>
+    </NavigationContainer></NotificationsProvider></DemoProvider>
   );
 }

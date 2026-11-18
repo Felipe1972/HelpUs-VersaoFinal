@@ -28,6 +28,7 @@ let apiResponse;
 const api = new Proxy({}, { get: (_, method) => async (...args) => { calls.push([method, ...args]); if (apiResponse) return apiResponse(method, ...args); return { data: { token: 'fake', usuario: { nome: 'Teste', email: 'teste@example.test' }, usuarios: [], mensagem: 'OK' } }; } });
 const storage = { salvarSessao: async (...args) => calls.push(['save', ...args]), limparSessao: async () => calls.push(['clear']) };
 let demo;
+let notificationUnread=2;
 const cache = {};
 function load(file) {
   const filename = path.resolve(root, file.endsWith('.js') ? file : `${file}.js`);
@@ -41,6 +42,7 @@ function load(file) {
     if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 24, bottom: 24 }) };
     if (name === '@expo/vector-icons') return { Ionicons: 'Ionicons' };
     if (name === 'expo-status-bar') return { StatusBar: 'StatusBar' };
+    if (name === 'expo-clipboard') return {setStringAsync:async()=>{}};
     if (name === 'expo-location') return location;
     if (name === 'react-native-maps') return { __esModule: true, default: 'MapView', Marker: 'Marker' };
     if (name === '@react-navigation/native') return { useIsFocused: () => true, useFocusEffect: effect => effects.push(effect), NavigationContainer: 'NavigationContainer' };
@@ -50,6 +52,7 @@ function load(file) {
     if (name === '@react-navigation/native-stack') return { createNativeStackNavigator: () => ({ Navigator: 'Navigator', Screen: 'Route' }) };
     if (name.endsWith('/api')) return { __esModule: true, default: api };
     if (name.endsWith('/authStorage')) return storage;
+    if (name.endsWith('/NotificationsContext')) return { useNotifications:()=>({unread:notificationUnread,refresh:async()=>{},open:async()=>{}}), NotificationsProvider:'NotificationsProvider',notificationNavigation:{},notificationNavigationChanged:()=>{},notificationPermission:async()=>'Autorizadas' };
     if (name.endsWith('/DemoContext')) return { useDemo: () => demo, DemoProvider: 'DemoProvider' };
     if (name.startsWith('.')) return load(path.relative(root, path.resolve(path.dirname(filename), name)));
     throw new Error(`Unexpected import: ${name}`);
@@ -69,10 +72,59 @@ const nav = { navigate: (...args) => calls.push(['navigate', ...args]), reset: v
 const render = (component, props = {}) => { cursor = 0; return component({ navigation: nav, ...props }); };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
+// Executa também os componentes filhos: JSX superficial não detecta erros no IconButton.
+function expandComponents(tree) {
+  if (Array.isArray(tree)) return tree.map(expandComponents);
+  if (!tree || typeof tree !== 'object') return tree;
+  if (typeof tree.type === 'function') return expandComponents(tree.type(tree.props || {}));
+  return { ...tree, props: { ...tree.props, children: expandComponents(tree.props?.children) } };
+}
+function componentRegression() {
+  const { IconButton, Header, BottomBar } = load('components/UI');
+  for (const os of ['android','ios']) {
+    native.Platform.OS=os;
+    for (const name of ['menu','arrow-back','send','refresh','information-circle-outline','locate-outline','close']) {
+      reset(); let pressed=0;
+      const button=expandComponents(IconButton({name,label:'Ação '+name,onPress:()=>pressed++}));
+      assert.equal(button.props.accessibilityLabel,'Ação '+name);
+      button.props.onPress();assert.equal(pressed,1);
+      assert.equal(IconButton({name,label:'Bloqueado',disabled:true}).props.disabled,true);
+    }
+    for (const options of [{},{back:true},{auth:true},{auth:true,back:true}]) {
+      reset(); const tree=expandComponents(Header({title:'Help Us',navigation:nav,...options}));
+      const buttons=nodes(tree).filter(n=>n.props?.accessibilityRole==='button');
+      assert.equal(buttons.length,options.auth&&!options.back?0:1);
+      if(buttons.length){buttons[0].props.onPress();if(!options.back)assert.equal(calls.at(-1)[1],'Menu')}
+    }
+    for (const count of [0,1,7,100]) {
+      reset();notificationUnread=count;
+      const tree=expandComponents(BottomBar({navigation:nav,active:'Notificacoes'}));
+      const tabs=nodes(tree).filter(n=>n.props?.accessibilityRole==='tab');assert.equal(tabs.length,4);
+      assert.equal(tabs[2].props.accessibilityLabel,count?'Avisos · '+count+' avisos não lidos':'Avisos');
+      assert.equal(tabs[0].props.accessibilityLabel,'Início');
+      const labels=nodes(tabs[2]).filter(n=>n.type==='Text').map(n=>n.props.children);
+      assert.equal(labels.length,count?2:1);
+      if(count)assert(labels.includes(count>99?'99+':count));
+      tabs[2].props.onPress();assert.equal(calls.at(-1)[1],'Notificacoes');
+    }
+    notificationUnread=2;
+    for(const [file,name]of [['screens/CommunityScreens','MenuScreen'],['screens/ChatScreens','ChatScreen'],['screens/HomeScreen','default']]) {
+      reset();const tree=expandComponents(render(load(file)[name],{route:{params:{}}}));assert(tree);
+      if(name==='MenuScreen'){
+        for(const row of nodes(tree).filter(n=>n.props?.accessibilityRole==='button'&&n.type==='Pressable'))row.props.onPress?.();
+        assert(calls.some(c=>c[1]==='Notificacoes'));assert(calls.some(c=>c[1]==='Perfil'));
+      }
+    }
+  }
+  native.Platform.OS='android';reset();
+  console.log('PASS: renderização recursiva de IconButton/Header/Menu/Home/Chat, ações e badge 0/1/7/99+ em Android/iOS simulados.');
+}
+
 (async () => {
+  componentRegression();
   reset();
   const routes = nodes(render(load('navigation/AppNavigator').default)).filter(n => n.type === 'Route').map(n => n.props.name);
-  assert.equal(new Set(routes).size, 20);
+  assert.equal(new Set(routes).size, 21);
   for (const file of ['screens/CommunityScreens', 'screens/ChatScreens']) {
     for (const component of Object.values(load(file))) {
       reset();
@@ -300,5 +352,5 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
   effects.at(-1)();await tick();assert(!JSON.stringify(render(Track,trackProps)).includes('PRIVADO_TESTE'),'Revogação remove conteúdo privado');
   console.log('PASS: geocodificação/erro, confirmação e alteração de endereço; acompanhamento remove dados revogados e confirma cancelamento.');
   console.log('PASS: polling mantém câmera, mapa e marcadores; falha de API, coordenadas inválidas, segundo plano, limpeza e GPS sem chamadas repetidas.');
-  console.log('PASS: regressões de conta/GPS/chat; 20 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
+  console.log('PASS: regressões de conta/GPS/chat; 21 rotas; formulário, GPS, clique duplicado, POST, refresh GET, centralização, Marker/detalhes, erro de rede e separação Solicitar ajuda/SOS. Serviços nativos/API simulados.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

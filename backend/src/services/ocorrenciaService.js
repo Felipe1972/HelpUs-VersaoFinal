@@ -71,8 +71,16 @@ async function criar(user, body) {
   if(endereco.latitude!==data.latitude||endereco.longitude!==data.longitude)throw new OcorrenciaError('O endereço e o ponto do pedido devem coincidir.');
   const [types] = await pool.execute('SELECT nome FROM tipo_ocorrencia WHERE id_tipo=?', [data.id_tipo]);
   if (!types.length) throw new OcorrenciaError('Tipo de ajuda inexistente.');
-  const [result] = await pool.execute(`INSERT INTO ocorrencia (id_solicitante,id_tipo,titulo,descricao,nivel_urgencia,status,latitude,longitude,endereco_referencia,descricao_publica,modalidade_horario,necessaria_em_utc,fuso_horario,endereco_snapshot) VALUES (?,?,?,?,?,'aberta',?,?,?,?,?,?,?,?)`,
+  const db=await pool.getConnection();
+  let id;
+  try {
+  await db.beginTransaction();
+  const [result] = await db.execute(`INSERT INTO ocorrencia (id_solicitante,id_tipo,titulo,descricao,nivel_urgencia,status,latitude,longitude,endereco_referencia,descricao_publica,modalidade_horario,necessaria_em_utc,fuso_horario,endereco_snapshot) VALUES (?,?,?,?,?,'aberta',?,?,?,?,?,?,?,?)`,
     [user.id_usuario, data.id_tipo, `Pedido de ajuda: ${types[0].nome}`, data.descricao, data.nivel_urgencia, data.latitude, data.longitude, data.endereco_referencia,data.descricao_publica.trim(),data.modalidade_horario,new Date(data.modalidade_horario==='agora'?Date.now():data.necessaria_em).toISOString().replace('T',' ').replace('Z',''),data.fuso_horario,JSON.stringify(endereco)]);
-  return detalhe(result.insertId, user);
+  id=result.insertId;
+  await require('./notificacaoService').opportunities(db,id,user.id_usuario);
+  await db.commit();
+  }catch(e){await db.rollback();throw e}finally{db.release()}
+  return detalhe(id, user);
 }
 module.exports = { OcorrenciaError, usuarioAtivo, validar, tipos, detalhe, listar, criar, exigirElegibilidadeParaAtendimento };

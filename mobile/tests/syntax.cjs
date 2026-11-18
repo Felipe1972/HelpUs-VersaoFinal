@@ -11,8 +11,18 @@ function collect(directory) {
   }
 }
 collect('src');
-for (const file of files) babel.transformFileSync(path.join(root, file), {
-  babelrc: false, configFile: false, ast: false, code: false,
-  plugins: ['@babel/plugin-transform-react-jsx', '@babel/plugin-transform-modules-commonjs'],
-});
-console.log(`PASS: sintaxe de ${files.length} arquivos JS/JSX.`);
+// Também verifica referências livres; sintaxe/bundle não detectam ReferenceError.
+const allowed=new Set([...Object.getOwnPropertyNames(globalThis),'__DEV__','requestAnimationFrame','cancelAnimationFrame']);
+const errors=[];
+for (const file of files) {
+ const result=babel.transformFileSync(path.join(root,file),{
+  babelrc:false,configFile:false,ast:true,code:false,
+  plugins:[['@babel/plugin-transform-react-jsx',{runtime:'automatic'}],'@babel/plugin-transform-modules-commonjs'],
+ });
+ babel.traverse(result.ast,{ReferencedIdentifier(p){
+  const name=p.node.name;
+  if(!p.scope.getBinding(name)&&!allowed.has(name)&&!['require','module','exports'].includes(name)) errors.push(file+':'+(p.node.loc?.start.line||'?')+' '+name);
+ }});
+}
+if(errors.length)throw new Error('Variáveis sem declaração:\n'+[...new Set(errors)].join('\n'));
+console.log(`PASS: sintaxe e escopo de ${files.length} arquivos JS/JSX.`);

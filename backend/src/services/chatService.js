@@ -125,6 +125,7 @@ async function saveMessage(claims, event) {
       [occurrenceId, claims.id_usuario, otherId, text,event.request_id],
     );
     const [rows] = await db.execute(`SELECT ${messageColumns} FROM mensagem WHERE id_mensagem = ?`, [insert.insertId]);
+    await require('./notificacaoService').create(db,otherId,occurrenceId,'mensagem','Nova mensagem recebida',conversation.id_conversa);
     await db.commit();
     return messageDTO(rows[0]);
   } catch (error) {

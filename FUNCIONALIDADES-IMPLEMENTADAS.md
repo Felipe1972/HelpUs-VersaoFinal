@@ -13,3 +13,8 @@ Tecnologias: Expo SDK58, React19.3, React Native0.88, React Navigation, Axios, A
 Segurança: servidor relê usuário e papel; comum só consulta pedidos próprios; consentimento exige vínculo ativo único; dados privados são removidos na consulta após revogação. Textos públicos e mensagens podem conter dados digitados pelo usuário: não existe anonimização automática desses textos. Vínculos legados ambíguos são preservados sem nova liberação privada. Testes não equivalem a auditoria externa de segurança.
 
 Execução e evidências detalhadas: RELATORIO-FINAL-HELPUS.md, AUDITORIA-FINAL-HELPUS.md e CHECKLIST-TESTES-FINAIS.md.
+
+
+## Complementos — checkpoint prioridade 1
+
+Como chegar e copiar endereço com autorização atual; deslocamento declarado e previsão persistida, sem rastreamento.

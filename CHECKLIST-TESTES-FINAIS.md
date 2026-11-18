@@ -23,3 +23,8 @@ Abra `backend/.final-test.local.json` no editor. Copie email e senha para o logi
 Registrar aparelho, versão do Expo Go, horário, ação, resultado e captura se houver falha. Testar o ciclo com dois aparelhos ao mesmo tempo; alternar contas num único telefone não comprova entrega em tempo real entre dispositivos. Não apagar registros: identificar todos os dados manuais como TESTE.
 
 Verificações da auditoria: acompanhar mapa por três ciclos sem desmontagem; revogar e confirmar remoção do endereço; aviso de conversa deve abrir conversas do pedido correto e permitir Ver todas; rótulos devem ser naturais (Aguardando ajuda, Concluído, Cancelado). Em falha temporária dos avisos, a lista carregada permanece; logout deve removê-la.
+
+
+## Complementos — checkpoint prioridade 1
+
+Prioridade 1 dos complementos: integração/API e mobile passaram. Pendente teste físico de Linking/Clipboard e notificações de a-caminho, cheguei e previsao. As etapas restantes estão em COMPLEMENTOS-FINAIS.md.

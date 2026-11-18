@@ -269,3 +269,8 @@ erDiagram
 ```
 
 O DER resume relações pai/filhos; as restrições exatas, nulabilidade e unicidade constam no DDL acima. Exceção: avaliacao.id_atendimento é UNIQUE e nullable: cada atendimento tem no máximo uma avaliação vinculada; avaliações legadas podem não ter vínculo. Conversa é única por ocorrência/solicitante/voluntário. Mensagens relacionam os participantes e a ocorrência; o UUID da conversa é resolvido no servidor. Consentimentos são eventos históricos por atendimento; o último evento define concessão/revogação, subordinada ao vínculo único ativo. Endereço salvo usa versões ativas; o pedido guarda snapshot JSON independente. Notificações são privadas e pertencem ao destinatário. tipo_usuario não substitui eh_voluntario: solicitar e voluntariar não são papéis exclusivos.
+
+
+## Complementos — checkpoint prioridade 1
+
+Migração aditiva de deslocamento aplicada: atendimento.a_caminho_em DATETIME NULL, chegou_em DATETIME NULL, previsao_minutos SMALLINT UNSIGNED NULL, previsao_registrada_em DATETIME NULL. Estados principais inalterados; registros anteriores preservados.

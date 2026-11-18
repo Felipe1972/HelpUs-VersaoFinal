@@ -14,4 +14,5 @@ for (const action of ['cancelar','compartilhar','revogar','desistir','solicitar-
  try {res.json(await require('../services/acompanhamentoService').action(req.usuario.id_usuario,req.params.id,action,req.body))}
  catch(e){res.status(e instanceof atendimento.AtendimentoError?e.status:500).json({mensagem:e instanceof atendimento.AtendimentoError?e.message:'Não foi possível concluir a ação.'})}
 });
+for(const kind of ['a-caminho','cheguei','previsao'])router.post('/ocorrencias/:id/'+kind,auth,async(req,res)=>{try{res.json(await require('../services/deslocamentoService').action(req.usuario.id_usuario,req.params.id,kind,req.body))}catch(e){res.status(e instanceof atendimento.AtendimentoError?e.status:500).json({mensagem:e instanceof atendimento.AtendimentoError?e.message:'Não foi possível registrar o deslocamento.'})}});
 module.exports = router;

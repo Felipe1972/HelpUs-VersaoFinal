@@ -29,6 +29,7 @@ async function metadata(db, c, uid) {
   return {
     privado: owner || (!!participant && consent),
     acompanhamento: {
+      deslocamento: participant&&a?{a_caminho_em:a.a_caminho_em,chegou_em:a.chegou_em,previsao_minutos:a.previsao_minutos,previsao_registrada_em:a.previsao_registrada_em}:null,
       pode_acompanhar: !!participant, ambiguo: c.accepted.length > 1,
       id_atendimento: participant ? a?.id_atendimento || null : null,
       responsavel: person?.nome || null, id_conversa: conversation?.id_conversa || null,

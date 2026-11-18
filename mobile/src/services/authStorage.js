@@ -28,3 +28,5 @@ export async function limparSessao() {
 
 export { TOKEN_KEY, USUARIO_KEY };
 
+
+export async function atualizarUsuarioSalvo(usuario){const atual=await buscarUsuarioSalvo();if(atual?.id_usuario===usuario.id_usuario)await AsyncStorage.setItem(USUARIO_KEY,JSON.stringify(usuario));}

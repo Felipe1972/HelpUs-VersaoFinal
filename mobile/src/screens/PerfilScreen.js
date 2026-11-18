@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import { ActivityIndicator, Alert, Text, View, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Button, ListRow, goMain, colors, ui } from '../components/UI';
@@ -11,7 +12,7 @@ export default function PerfilScreen({ navigation }) {
   const [excluindo, setExcluindo] = useState(false);
   const [tentativa, setTentativa] = useState(0);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let telaAtiva = true;
 
     async function carregarPerfil() {
@@ -51,7 +52,7 @@ export default function PerfilScreen({ navigation }) {
     return () => {
       telaAtiva = false;
     };
-  }, [navigation, tentativa]);
+  }, [navigation, tentativa]));
 
   async function sair() {
     try {
@@ -124,7 +125,7 @@ export default function PerfilScreen({ navigation }) {
         {usuario.eh_voluntario&&<Text style={ui.subtitle}>{usuario.reputacao?usuario.reputacao.media.toFixed(1)+' / 5 · '+usuario.reputacao.quantidade+' avaliações':'Ainda sem avaliações recebidas'}</Text>}
       </Card> : <Card><Text style={ui.subtitle}>Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.</Text><Button style={{ marginTop: 16 }} title="Tentar novamente" onPress={() => setTentativa(value => value + 1)} /></Card>}
       {usuario?.eh_voluntario&&<View style={ui.row}><Text style={ui.label}>Disponível para ajudar</Text><Switch accessibilityLabel="Disponível para ajudar" value={!!usuario.disponivel} onValueChange={async disponivel=>{try{await api.put('/minha-disponibilidade',{disponivel});setUsuario(u=>({...u,disponivel}))}catch{Alert.alert('Não foi possível atualizar a disponibilidade.')}}}/></View>}
-      <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
+      <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="create-outline" title="Editar perfil" onPress={()=>navigation.navigate('EditarPerfil')}/><ListRow icon="people-outline" title="Meus contatos de emergência" onPress={()=>navigation.navigate('ContatosEmergencia')}/><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
       <ListRow icon="notifications-outline" title="Permissão de notificações" onPress={()=>navigation.navigate('NotificationSettings')} />
       <ListRow icon="people-outline" title="Ver usuários" onPress={() => navigation.navigate('Usuarios')} />
       <ListRow icon="lock-closed-outline" title="Trocar senha" onPress={() => navigation.navigate('TrocarSenha')} />

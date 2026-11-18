@@ -16,7 +16,7 @@ async function obtainLocation(Location, timeoutMs = 20000) {
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), timeoutMs); }),
     ]);
     if (!validPosition(current)) throw new Error('invalid');
-    return { latitude: current.coords.latitude, longitude: current.coords.longitude, source: 'current' };
+    return { latitude: current.coords.latitude, longitude: current.coords.longitude, source: 'current', timestamp: current.timestamp ?? Date.now(), accuracy: current.coords.accuracy };
   } catch {
     let last;
     try { last = await Location.getLastKnownPositionAsync({ maxAge: MAX_AGE, requiredAccuracy: MAX_ACCURACY }); } catch { /* Tentar novamente na interface. */ }

@@ -50,6 +50,7 @@ export default function AcompanhamentoScreen({ navigation, route }) {
         {a?.responsavel&&<Text style={ui.label}>Responsável: {a.responsavel}</Text>}
         {a?.reputacao&&<Text style={ui.subtitle}>{a.reputacao.media.toFixed(1)} / 5 · {a.reputacao.quantidade} avaliação(ões)</Text>}
         {a?.ambiguo&&<Text style={ui.subtitle}>Este pedido antigo possui vínculos simultâneos. O histórico foi preservado; novas liberações de localização estão bloqueadas.</Text>}
+        {item.meu_pedido&&a?.id_conversa&&<Button title="Ver perfil do voluntário" tone="soft" onPress={()=>navigation.navigate('PerfilVoluntario',{id_conversa:a.id_conversa})}/>}
         {a?.id_conversa&&<Button title="Abrir chat do atendimento" onPress={()=>navigation.navigate('Chat',{id_conversa:a.id_conversa})}/>}
         {!a?.id_conversa&&<Button title="Ver minhas conversas" tone="soft" onPress={()=>navigation.navigate('Conversas')}/>}
       </Card>

@@ -274,3 +274,5 @@ O DER resume relações pai/filhos; as restrições exatas, nulabilidade e unici
 ## Complementos — checkpoint prioridade 1
 
 Migração aditiva de deslocamento aplicada: atendimento.a_caminho_em DATETIME NULL, chegou_em DATETIME NULL, previsao_minutos SMALLINT UNSIGNED NULL, previsao_registrada_em DATETIME NULL. Estados principais inalterados; registros anteriores preservados.
+
+Complementos: já aplicados mensagem.lida_em DATETIME NULL e usuario.disponivel TINYINT(1) NOT NULL DEFAULT 1. Nenhuma nova tabela/relação; contato_emergencia reutilizada. Não reaplicar migrações.

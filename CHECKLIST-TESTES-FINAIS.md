@@ -28,3 +28,10 @@ Verificações da auditoria: acompanhar mapa por três ciclos sem desmontagem; r
 ## Complementos — checkpoint prioridade 1
 
 Prioridade 1 dos complementos: integração/API e mobile passaram. Pendente teste físico de Linking/Clipboard e notificações de a-caminho, cheguei e previsao. As etapas restantes estão em COMPLEMENTOS-FINAIS.md.
+
+## Entrega de complementos — 18/11/2026
+Concluídos: lembretes locais, leitura por destinatário/IDs visíveis, disponibilidade independente, distância 2/5/10/25km/Todos e ordenação, perfil público contextual com avaliações reais, edição nome/telefone, contatos privados CRUD.
+Testes: 8 backend, 13 mobile, renderização/24 rotas, sintaxe/36 arquivos; integrações finalização, chat, permissões, atendimento e notificações aprovadas. Dados anteriores preservados. Bundles Android/iOS gerados. Doctor 19/20: patch esperado 58.0.26 versus 58.0.25, preservado. API Desktop reiniciada e /status confirmado na porta3000.
+Pendente físico Samsung/iPhone: teclado/fontes, GPS/filtro/mapa/polling, lembrete com tela bloqueada e toque, mensagens visíveis/badge, logout/troca de conta, edição e contatos. Testes nativos simulados.
+Limites: distância em linha reta, GPS até2min/precisão100m; sem GPS adequado mostra Todos. Notificações não filtradas geograficamente. Lembrete pode tocar após cancelamento com app fechado sem push; toque reautoriza na API. Badge usa polling.
+Sem atualização Expo/Node global, sem OneDrive, sem push. Checkpoint anterior 5a1b7e8.

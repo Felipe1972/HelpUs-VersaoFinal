@@ -12,3 +12,13 @@ Preparação: API /status deve responder helpus-finalizacao-v1 na porta3000. Ini
 Se falhar: confira /status, terminal da API, Wi-Fi e IP do .env mobile. EADDRINUSE significa porta ocupada: não abrir segunda API nem matar todos os processos Node. GPS negado: restaurar permissão e tentar novamente; geocodificação indisponível: preencher manualmente preservando ponto real. Timeout de criação/envio: conferir mapa/histórico antes de repetir. Nunca simular sucesso para contornar indisponibilidade. SOS é informativo e não deve ser apresentado como emergência real. Contas Expo (para abrir projeto) são diferentes das contas Help Us.
 
 Ensaiar em ambos aparelhos com fonte ampliada, teclado e segundo plano. A validação física ainda está pendente; não afirmar que exportação do bundle a substitui.
+
+## Complementos finais
+1. Home voluntário: raio e lista por proximidade com GPS.
+2. Perfil: disponibilidade desligada preserva atendimento/chat.
+3. Solicitante: conversa > Ver perfil do voluntário.
+4. Perfil > Editar perfil: nome/telefone.
+5. Meus contatos de emergência: cadastrar/editar/remover com confirmação.
+6. Atendimento agendado: lembrete local; explicar limite com app fechado.
+7. Trocar mensagens, abrir conversa e conferir badge após polling.
+8. Compartilhar local, deslocamento, chegada, conclusão e avaliação.

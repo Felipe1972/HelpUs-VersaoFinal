@@ -56,6 +56,7 @@ export function ChatScreen({ navigation, route }) {
   const readOnly = chat.conversation?.somente_leitura;
   return <Screen title={chat.conversation?.interlocutor.nome || 'Conversa'} navigation={navigation} back active="Conversas" scroll={false}>
     <View style={{ padding: 14, gap: 6 }}>{chat.conversation?.id_ocorrencia&&<Button title={'Pedido #'+chat.conversation.id_ocorrencia+' · Acompanhar'} tone="soft" onPress={()=>navigation.navigate('Acompanhamento',{id_ocorrencia:chat.conversation.id_ocorrencia})}/>}
+      {chat.conversation?.pode_ver_perfil_voluntario&&<Button title="Ver perfil do voluntário" tone="soft" onPress={()=>navigation.navigate('PerfilVoluntario',{id_conversa:route.params.id_conversa})}/>}
       <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { textAlign: 'center', fontSize: 12 }]}>{chat.loading ? 'Carregando histórico…' : readOnly ? chat.conversation?.motivo_somente_leitura || 'Conversa encerrada · somente leitura' : chat.status}</Text>
       {chat.conversation?.status&&<Text style={ui.subtitle}>Status do pedido: {statusLabel(chat.conversation.status)}</Text>}
       {!!chat.error && <Text accessibilityLiveRegion="polite" style={[ui.subtitle, { fontSize: 12, textAlign: 'center' }]}>{chat.error}</Text>}

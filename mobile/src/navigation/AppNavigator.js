@@ -1,3 +1,5 @@
+import ContaComplementosScreen from '../screens/ContaComplementosScreen';
+import PerfilVoluntarioScreen from '../screens/PerfilVoluntarioScreen';
 import { NotificationsProvider,notificationNavigation,notificationNavigationChanged } from '../context/NotificationsContext';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 import AcompanhamentoScreen from '../screens/AcompanhamentoScreen';
@@ -66,7 +68,7 @@ export default function AppNavigator() {
           component={TrocarSenhaScreen}
           options={{ headerShown: false }}
         />
-        {Object.entries({ NotificationSettings: NotificationSettingsScreen, Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
+        {Object.entries({ EditarPerfil: ContaComplementosScreen, ContatosEmergencia: ContaComplementosScreen, PerfilVoluntario: PerfilVoluntarioScreen, NotificationSettings: NotificationSettingsScreen, Conversas: ConversasScreen, Chat: ChatScreen, Acompanhamento: AcompanhamentoScreen, MeuEndereco: MeuEnderecoScreen, Notificacoes: NotificacoesReaisScreen, Aviso: AvisoScreen, AlertaEmergencia: AlertaEmergenciaScreen, OcorrenciaMapa: OcorrenciaMapaScreen, OcorrenciaDetalhes: OcorrenciaDetalhesScreen, Menu: MenuScreen, SOS: SOSScreen, SolicitarAjuda: PedidosScreen, MeusPedidos: MeusPedidosScreen, RecuperarSenha: RecuperarSenhaScreen }).map(([name, component]) => <Stack.Screen key={name} name={name} component={component} options={{ headerShown: false }} />)}
       </Stack.Navigator>
     </NavigationContainer></NotificationsProvider></DemoProvider>
   );

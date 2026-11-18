@@ -10,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/usuarios', usuarioRoutes);
 app.use(chatRoutes);
+app.use(require('./routes/contaComplementosRoutes'));
 app.use(require('./routes/ocorrenciaRoutes'));
 app.use(require('./routes/acompanhamentoRoutes'));
 

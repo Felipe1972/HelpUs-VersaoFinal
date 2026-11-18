@@ -1,3 +1,4 @@
+import { nearby, recentPosition } from '../services/proximity';
 import { statusLabel } from '../services/statusLabels';
 import { obtainLocation } from '../services/pedidoLocation';
 import { useCallback, useEffect, useState, useRef } from 'react';
@@ -21,10 +22,13 @@ export default function HomeScreen({ navigation }) {
   const map = useRef(null), positionCache = useRef(null), locationBusy = useRef(false), alive = useRef(true);
   const [locating,setLocating]=useState(false);
   const [group,setGroup]=useState(null),[legend,setLegend]=useState(false);
+  const [radius,setRadius]=useState(null),[nearList,setNearList]=useState(false);
+  const locationUsable=recentPosition(positionCache.current);
+  const visiblePedidos=nearby(pedidos,positionCache.current,radius,nearList);
   const dimensions=useWindowDimensions();
   const compact=dimensions.height<660||dimensions.fontScale>1.3;
-  const listMode=['assumidos','meus','recusados'].includes(escopo);
-  const groups=Object.values(pedidos.filter(validPoint).reduce((all,p)=>{const k=p.latitude+','+p.longitude;(all[k]??=[]).push(p);return all},{}));
+  const listMode=['assumidos','meus','recusados'].includes(escopo)||(escopo==='disponiveis'&&nearList);
+  const groups=Object.values(visiblePedidos.filter(validPoint).reduce((all,p)=>{const k=p.latitude+','+p.longitude;(all[k]??=[]).push(p);return all},{}));
   const valid = p => p && Number.isFinite(p.latitude) && Math.abs(p.latitude)<=90 && Number.isFinite(p.longitude) && Math.abs(p.longitude)<=180;
   const center = useCallback(p => {
     const next={latitude:p.latitude,longitude:p.longitude,latitudeDelta:0.02,longitudeDelta:0.02};
@@ -71,6 +75,11 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.tabs}>
       {(perfil?.eh_voluntario?[['disponiveis','Disponíveis'],['assumidos','Atend.'],['meus','Pedidos']]:[['mapa','Meu mapa'],['meus','Meus pedidos e histórico']]).map(([scope,label])=><Pressable key={scope} accessibilityRole="tab" accessibilityState={{selected:escopo===scope||scope==='disponiveis'&&escopo==='mapa'||scope==='assumidos'&&escopo==='recusados'}} style={[styles.tab,(escopo===scope||scope==='disponiveis'&&escopo==='mapa')&&styles.activeTab]} onPress={()=>{setGroup(null);setSelected(null);setEscopo(scope)}}><Text style={{color:escopo===scope?colors.blue:colors.muted,fontWeight:'700',textAlign:'center'}}>{label}</Text></Pressable>)}
     </View>
+    {perfil?.eh_voluntario&&escopo==='disponiveis'&&<View>
+      <ScrollView horizontal style={{maxHeight:48}} contentContainerStyle={{gap:6}}>{[null,2,5,10,25].map(k=><Pressable key={String(k)} accessibilityRole="radio" accessibilityState={{selected:radius===k,disabled:k!==null&&!locationUsable}} disabled={k!==null&&!locationUsable} onPress={()=>{setRadius(k);setSelected(null);setGroup(null)}} style={{paddingHorizontal:12,minHeight:44,justifyContent:'center',borderRadius:14,backgroundColor:radius===k?'#EAF2FF':'white',borderWidth:1,borderColor:radius===k?colors.blue:colors.line}}><Text style={{color:k!==null&&!locationUsable?colors.muted:colors.blue}}>{k===null?'Todos':k+' km'}</Text></Pressable>)}</ScrollView>
+      <Pressable accessibilityRole="button" onPress={()=>{setNearList(v=>!v);setSelected(null);setGroup(null)}} style={{minHeight:44,justifyContent:'center'}}><Text style={{color:colors.blue}}>{nearList?'Ver no mapa':'Lista por proximidade'} · distância aproximada</Text></Pressable>
+      {!locationUsable&&<Text style={styles.noticeText}>Filtro sem GPS recente e preciso: mostrando todos. Use Centralizar em mim para tentar novamente.</Text>}
+    </View>}
     <View style={[styles.mapContainer,compact&&{height:360,flex:0}]}>
       <View style={[styles.mapCanvas,listMode&&{opacity:0}]} pointerEvents={listMode?'none':'auto'}>
         {regiao&&<MapView ref={map} style={styles.map} initialRegion={regiao} onRegionChangeComplete={r=>{if(valid(r))setRegiao(r)}}>
@@ -87,12 +96,12 @@ export default function HomeScreen({ navigation }) {
       {listMode&&<ScrollView style={styles.list} contentContainerStyle={{padding:14,gap:12}}>
         {['assumidos','recusados'].includes(escopo)&&<Button title={escopo==='recusados'?'Voltar aos atendimentos':'Ver chamados recusados'} tone="soft" onPress={()=>setEscopo(escopo==='recusados'?'assumidos':'recusados')}/>}
         {escopo==='assumidos'&&<Button title="Histórico de atendimentos" tone="soft" onPress={()=>navigation.navigate('MeusPedidos',{escopo:'assumidos'})}/>}
-        {!pedidos.length&&!loading&&<Text style={styles.noticeText}>{escopo==='meus'?'Você ainda não criou pedidos de ajuda.':escopo==='recusados'?'Nenhum chamado recusado.':'Você ainda não possui atendimentos.'}</Text>}
-        {pedidos.map(p=><Pressable key={p.id_ocorrencia} accessibilityRole="button" style={styles.orderRow} onPress={()=>navigation.navigate(p.acompanhamento?.pode_acompanhar?'Acompanhamento':'OcorrenciaDetalhes',{id_ocorrencia:p.id_ocorrencia})}><Text style={{fontWeight:'700',fontSize:16}}>{p.titulo}</Text><Text style={{color:colors.muted}}>{p.meu_pedido?'Seu pedido':'Atendimento'} · {statusLabel(p.status)} · {urgencyLabels[p.nivel_urgencia]}</Text><Text style={{color:colors.muted}}>{p.necessaria_em?new Date(p.necessaria_em).toLocaleString('pt-BR'):'Horário não informado'}</Text><Text style={{color:colors.blue}}>Abrir pedido →</Text></Pressable>)}
+        {!visiblePedidos.length&&!loading&&<Text style={styles.noticeText}>{escopo==='meus'?'Você ainda não criou pedidos de ajuda.':escopo==='recusados'?'Nenhum chamado recusado.':'Nenhum pedido neste filtro.'}</Text>}
+        {visiblePedidos.map(p=><Pressable key={p.id_ocorrencia} accessibilityRole="button" style={styles.orderRow} onPress={()=>navigation.navigate(p.acompanhamento?.pode_acompanhar?'Acompanhamento':'OcorrenciaDetalhes',{id_ocorrencia:p.id_ocorrencia})}><Text style={{fontWeight:'700',fontSize:16}}>{p.titulo}</Text><Text style={{color:colors.muted}}>{p.meu_pedido?'Seu pedido':'Atendimento'} · {statusLabel(p.status)} · {urgencyLabels[p.nivel_urgencia]}</Text><Text style={{color:colors.muted}}>{p.necessaria_em?new Date(p.necessaria_em).toLocaleString('pt-BR'):'Horário não informado'}</Text>{p.distancia_km!==null&&<Text style={{color:colors.muted}}>Aproximadamente {p.distancia_km.toFixed(1)} km em linha reta</Text>}<Text style={{color:colors.blue}}>Abrir pedido →</Text></Pressable>)}
         <Button title="Atualizar lista" tone="soft" disabled={loading} onPress={()=>setAttempt(v=>v+1)}/>
       </ScrollView>}
     </View>
-    <Text accessibilityLiveRegion="polite" style={styles.count}>{error||(loading&&!pedidos.length?'Carregando pedidos…':pedidos.length+' '+(escopo==='disponiveis'?'pedidos disponíveis':listMode?'pedidos na lista':'pedidos no mapa'))}</Text>
+    <Text accessibilityLiveRegion="polite" style={styles.count}>{error||(loading&&!pedidos.length?'Carregando pedidos…':visiblePedidos.length+' '+(escopo==='disponiveis'?'pedidos disponíveis':listMode?'pedidos na lista':'pedidos no mapa'))}</Text>
     <View style={styles.helpCard}><Button title="Solicitar ajuda" style={{flex:1}} onPress={()=>navigation.navigate('SolicitarAjuda')}/><Button title="SOS" tone="red" onPress={()=>navigation.navigate('SOS')}/></View>
   </>;
   return <View style={styles.container}><Header title="Help Us" navigation={navigation}/>{compact?<ScrollView contentContainerStyle={styles.content}>{body}</ScrollView>:<View style={[styles.content,{flex:1}]}>{body}</View>}<BottomBar navigation={navigation} active="Home"/></View>;

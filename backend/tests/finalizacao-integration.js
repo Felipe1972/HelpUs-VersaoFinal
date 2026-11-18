@@ -15,6 +15,10 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  try{
  for(const [label,v]of [['Solicitante',false],['Voluntario_A',true],['Voluntario_B',true],['Terceiro',false]]){const email='final.'+label.toLowerCase()+'.'+run+'@example.invalid';const b=await req('POST','/usuarios/cadastro',null,{nome:'TESTE_FINAL_'+label+'_'+run,email,senha,confirmarSenha:senha,eh_voluntario:v},201);accounts.push({id_usuario:b.usuario.id_usuario,nome:label,email});save()}
  const[owner,v1,v2,stranger]=accounts;
+ await req('PUT','/meu-perfil',owner,{nome:'Teste Editado',telefone:'51999999999',eh_voluntario:true},400);
+ await req('PUT','/meu-perfil',owner,{nome:'Teste Editado',telefone:'51999999999'});assert.equal((await req('GET','/usuarios/me',owner)).usuario.nome,'Teste Editado');
+ const contact={nome:'Contato Teste',telefone:'51999999999',parentesco:'Amigo'};const cid=(await req('POST','/meus-contatos',owner,contact)).id_contato;
+ assert.equal((await req('GET','/meus-contatos',stranger)).contatos.length,0);await req('PUT','/meus-contatos/'+cid,stranger,contact,404);await req('DELETE','/meus-contatos/'+cid,stranger,null,404);await req('PUT','/meus-contatos/'+cid,owner,{...contact,nome:'Contato Editado'});assert.equal((await req('GET','/meus-contatos',owner)).contatos[0].nome,'Contato Editado');await req('DELETE','/meus-contatos/'+cid,owner);assert.equal((await req('GET','/meus-contatos',owner)).contatos.length,0);
  const body={id_tipo:1,descricao:'DESCRICAO_PRIVADA_'+run,descricao_publica:'TESTE FINAL '+run,nivel_urgencia:'media',latitude:addr.latitude,longitude:addr.longitude,endereco:addr,modalidade_horario:'agora',fuso_horario:'America/Sao_Paulo'};
  async function create(extra={}){const b=await req('POST','/ocorrencias',owner,{...body,...extra},201);report.pedidos.push(b.ocorrencia.id_ocorrencia);save();return b.ocorrencia.id_ocorrencia}
  const detail=async(id,u)=>(await req('GET','/ocorrencias/'+id,u)).ocorrencia;
@@ -87,6 +91,10 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  await Promise.allSettled([act(duel,owner,'compartilhar',{id_atendimento:da}),act(duel,owner,'revogar',{id_atendimento:da})]);
  const lastConsent=(await pool.query('SELECT acao FROM consentimento_localizacao WHERE id_atendimento=? ORDER BY id_consentimento DESC LIMIT 1',[da]))[0][0];assert.equal((await detail(duel,v1)).endereco_disponivel,lastConsent?.acao==='compartilhar');
  const ending=await Promise.allSettled([act(duel,v1,'desistir'),act(duel,owner,'finalizar')]);assert.equal(ending.filter(x=>x.status==='fulfilled').length,1);assert.equal((await detail(duel,v1)).endereco,null);
+ const profileId=(await req('GET','/conversas',owner)).conversas.find(c=>c.id_ocorrencia===id&&c.interlocutor.nome.includes(winner.nome)).id_conversa;
+ const publicProfile=(await req('GET','/conversas/'+profileId+'/perfil-voluntario',owner)).perfil;
+ assert.deepEqual(Object.keys(publicProfile).sort(),['primeiro_nome','participa_desde','avaliacoes','media','atendimentos_concluidos'].sort());assert.equal(publicProfile.media,5);assert.equal(publicProfile.avaliacoes,1);assert.equal(publicProfile.atendimentos_concluidos,1);
+ await req('GET','/conversas/'+profileId+'/perfil-voluntario',stranger,null,403);await req('GET','/conversas/'+profileId+'/perfil-voluntario',winner,null,403);
  const rating=(await req('GET','/usuarios/me',winner)).usuario.reputacao;assert.equal(rating.media,5);assert.equal(rating.quantidade,1);
  report.testes.push('Disputa desistência/conclusão com um único vencedor; consentimento concorrente consistente; média de avaliação conferida');
  const demo=await create({descricao_publica:'Demonstração final — pedido disponível',modalidade_horario:'agendado',necessaria_em:new Date(Date.now()+86400000).toISOString()});report.pedido_demonstracao=demo;

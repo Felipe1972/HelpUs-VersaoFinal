@@ -9,11 +9,11 @@ Projeto Desktop/HelpUsTeste. Alterações anteriores preservadas. Sem push.
 - [x] Lembretes
 - [x] Mensagens não lidas
 - [x] Disponibilidade
-- [ ] Distância
-- [ ] Perfil público
-- [ ] Editar perfil
-- [ ] Contatos privados
-- [ ] Validação final
+- [x] Distância
+- [x] Perfil público
+- [x] Editar perfil
+- [x] Contatos privados
+- [x] Validação automatizada; física pendente
 
 Checkpoint: Linking/web e clipboard validados com adaptadores nativos; API destino testada com responsável, proprietário, terceiros e revogação. Migração deslocamento adicionou quatro campos opcionais e preservou 82 atendimentos. Etapas 3–4 aguardam teste integrado.
 
@@ -38,3 +38,14 @@ Commit local do conjunto estável: aa1fc1f. Inclui a implementação de notifica
 Retomada: lembretes e leitura validados em integração (usuários 79–82); testes de reconciliação e mobile passaram. Leitura usa mensagem.lida_em opcional, destinatário e IDs visíveis autorizados. Sem mudança no protocolo WebSocket.
 
 Checkpoint etapas 5–7: integração real com usuários 87–90, pedidos 103–109; disponibilidade bloqueia oportunidades/aceite/novos avisos e preserva atendimento/chat. 12 testes mobile + renderização aprovados. Migrações aditivas já aplicadas: mensagem.lida_em DATETIME NULL; usuario.disponivel TINYINT(1) NOT NULL DEFAULT 1. Registros anteriores preservados.
+
+Proximidade: Haversine com ponto <=2min e precisão <=100m, fallback Todos e pedidos próprios/assumidos preservados; sem GPS adicional automático. Perfil público limitado à conversa autorizada do solicitante. Testes direcionados de filtro, renderização/polling e escopo passaram.
+
+## Entrega de complementos — 18/11/2026
+Concluídos: lembretes locais, leitura por destinatário/IDs visíveis, disponibilidade independente, distância 2/5/10/25km/Todos e ordenação, perfil público contextual com avaliações reais, edição nome/telefone, contatos privados CRUD.
+Testes: 8 backend, 13 mobile, renderização/24 rotas, sintaxe/36 arquivos; integrações finalização, chat, permissões, atendimento e notificações aprovadas. Dados anteriores preservados. Bundles Android/iOS gerados. Doctor 19/20: patch esperado 58.0.26 versus 58.0.25, preservado. API Desktop reiniciada e /status confirmado na porta3000.
+Pendente físico Samsung/iPhone: teclado/fontes, GPS/filtro/mapa/polling, lembrete com tela bloqueada e toque, mensagens visíveis/badge, logout/troca de conta, edição e contatos. Testes nativos simulados.
+Limites: distância em linha reta, GPS até2min/precisão100m; sem GPS adequado mostra Todos. Notificações não filtradas geograficamente. Lembrete pode tocar após cancelamento com app fechado sem push; toque reautoriza na API. Badge usa polling.
+Sem atualização Expo/Node global, sem OneDrive, sem push. Checkpoint anterior 5a1b7e8.
+
+Checkpoints anteriores são históricos; esta entrega os substitui. Rotas novas: GET /conversas/:id/perfil-voluntario; PUT /meu-perfil; GET/POST /meus-contatos; PUT/DELETE /meus-contatos/:id. JWT/usuário ativo; contato sempre pelo proprietário.

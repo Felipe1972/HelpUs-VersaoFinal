@@ -33,6 +33,6 @@ Conversa tem unicidade por vínculo de participantes/ocorrência. Avaliação po
 ## Migrações e preservação
 Scripts SQL estão em [database](../database) e scripts controlados em [backend/scripts](../backend/scripts). Alguns scripts históricos não são idempotentes: não executar todos em sequência nem reaplicar na instalação já existente. O dump privado é a referência para restauração controlada do esquema completo; este resumo não é um script de criação.
 FKs de vínculos usam predominantemente ON DELETE CASCADE; tipo de ocorrência é restrito e a referência opcional de notificação à conversa usa SET NULL. Qualquer limpeza deve calcular dependências, usar IDs comprovados, backup e transação, sem reiniciar AUTO_INCREMENT.
-Backup de preparação: .private-backups/apresentacao-1795007726745, com SQL, snapshot, plano e resultado privados. A limpeza anterior removeu65 contas comprovadas e preservou61; documentos completos de IDs estão no histórico arquivado. Não divulgar backups nem credenciais.
+Backup de preparação: ../HelpUs-Arquivo/backups-banco/apresentacao-1795007726745, com SQL, snapshot, plano e resultado privados. A limpeza anterior removeu65 contas comprovadas e preservou61; documentos completos de IDs estão no histórico arquivado. Não divulgar backups nem credenciais.
 
 [Arquitetura](ARQUITETURA.md) · [Funcionalidades](FUNCIONALIDADES.md)

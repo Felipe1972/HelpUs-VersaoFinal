@@ -32,3 +32,5 @@ Prioridades 2–4 ainda pendentes: não foram implementados lembretes, mensagens
 ## Validação do checkpoint
 
 Backend: 8 testes unitários, integração completa finalizacao e autorização da API em execução aprovados. Mobile: 11 testes, smoke/renderização e sintaxe/escopo aprovados. Bundles Android/iOS gerados. Doctor 19/20: somente patch Expo esperado 58.0.26 versus instalado 58.0.25; não atualizado por restrição. API confirmada/reiniciada: Desktop/HelpUsTeste/backend/server.js, PID 5624, porta 3000. Prioridades 2–4 e validação final dessas prioridades continuam pendentes.
+
+Commit local do conjunto estável: aa1fc1f. Inclui a implementação de notificações já existente e as quatro primeiras funções dos complementos. Sem push. Retomar pela etapa 5 (lembretes), sem repetir a migração de deslocamento.

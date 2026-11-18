@@ -1,1 +1,14 @@
-require('dotenv').config({quiet:true});const p=require('../src/config/database');(async()=>{try{if(process.env.DB_NAME!=='help_us2')throw Error('Banco inesperado');if(!(await p.query("SHOW COLUMNS FROM usuario LIKE 'disponivel'"))[0].length)await p.query('ALTER TABLE usuario ADD COLUMN disponivel TINYINT(1) NOT NULL DEFAULT 1');console.log('Disponibilidade pronta; eh_voluntario preservado.')}finally{await p.end()}})();
+require('dotenv').config({ quiet: true });
+const p = require('../src/config/database');
+(async () => {
+  try {
+    if (process.env.DB_NAME !== 'help_us2') throw Error('Banco inesperado');
+    if (!(await p.query("SHOW COLUMNS FROM usuario LIKE 'disponivel'"))[0].length)
+      await p.query(
+        'ALTER TABLE usuario ADD COLUMN disponivel TINYINT(1) NOT NULL DEFAULT 1',
+      );
+    console.log('Disponibilidade pronta; eh_voluntario preservado.');
+  } finally {
+    await p.end();
+  }
+})();

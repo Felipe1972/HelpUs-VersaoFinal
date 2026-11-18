@@ -13,10 +13,10 @@ server.listen(PORT, () => {
   console.log(`Servidor Help Us executando na porta ${PORT}`);
 });
 
+// Encerra conexões e libera o servidor e o pool de banco.
 function shutdown() {
   chat.close();
   server.close(() => pool.end().finally(() => process.exit(0)));
 }
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
-

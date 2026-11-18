@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+// Valida o JWT antes de disponibilizar a identidade às rotas protegidas.
 function autenticar(request, response, next) {
   const authorization = request.headers.authorization;
 
@@ -24,4 +25,3 @@ function autenticar(request, response, next) {
 }
 
 module.exports = autenticar;
-

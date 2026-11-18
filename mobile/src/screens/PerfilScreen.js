@@ -1,59 +1,61 @@
 import { useCallback, useState } from 'react';
-import {useFocusEffect} from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, Alert, Text, View, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Card, Button, ListRow, goMain, colors, ui } from '../components/UI';
 import api from '../services/api';
 import { limparSessao } from '../services/authStorage';
 
+// Renderiza a tela Perfil.
 export default function PerfilScreen({ navigation }) {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [excluindo, setExcluindo] = useState(false);
   const [tentativa, setTentativa] = useState(0);
 
-  useFocusEffect(useCallback(() => {
-    let telaAtiva = true;
+  useFocusEffect(
+    useCallback(() => {
+      let telaAtiva = true;
 
-    async function carregarPerfil() {
-      setCarregando(true);
-      try {
-        const response = await api.get('/usuarios/me');
-
-        if (telaAtiva) {
-          setUsuario(response.data.usuario);
-        }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          await limparSessao();
+      // Busca os dados atuais do perfil e trata sessão expirada.
+      async function carregarPerfil() {
+        setCarregando(true);
+        try {
+          const response = await api.get('/usuarios/me');
 
           if (telaAtiva) {
-            Alert.alert('Sessão encerrada', 'Entre novamente para continuar.');
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
+            setUsuario(response.data.usuario);
           }
-        } else if (telaAtiva) {
-          Alert.alert(
-            'Erro',
-            'Não foi possível carregar os dados atuais do perfil.',
-          );
-        }
-      } finally {
-        if (telaAtiva) {
-          setCarregando(false);
+        } catch (error) {
+          if (error.response?.status === 401) {
+            await limparSessao();
+
+            if (telaAtiva) {
+              Alert.alert('Sessão encerrada', 'Entre novamente para continuar.');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            }
+          } else if (telaAtiva) {
+            Alert.alert('Erro', 'Não foi possível carregar os dados atuais do perfil.');
+          }
+        } finally {
+          if (telaAtiva) {
+            setCarregando(false);
+          }
         }
       }
-    }
 
-    carregarPerfil();
+      carregarPerfil();
 
-    return () => {
-      telaAtiva = false;
-    };
-  }, [navigation, tentativa]));
+      return () => {
+        telaAtiva = false;
+      };
+    }, [navigation, tentativa]),
+  );
 
+  // Limpa a sessão e retorna à tela de login.
   async function sair() {
     try {
       await limparSessao();
@@ -66,6 +68,7 @@ export default function PerfilScreen({ navigation }) {
     }
   }
 
+  // Executa a exclusão da conta pelo fluxo autenticado.
   async function excluirConta() {
     try {
       setExcluindo(true);
@@ -88,8 +91,7 @@ export default function PerfilScreen({ navigation }) {
       } else {
         Alert.alert(
           'Erro ao excluir conta',
-          error.response?.data?.mensagem ||
-            'Não foi possível excluir a conta.',
+          error.response?.data?.mensagem || 'Não foi possível excluir a conta.',
         );
       }
     } finally {
@@ -97,6 +99,7 @@ export default function PerfilScreen({ navigation }) {
     }
   }
 
+  // Pede confirmação explícita antes da exclusão permanente.
   function confirmarExclusao() {
     Alert.alert(
       'Excluir conta?',
@@ -115,21 +118,120 @@ export default function PerfilScreen({ navigation }) {
   return (
     <Screen title="Meu perfil" navigation={navigation} active="Perfil">
       <Button title="Ir para a Home" onPress={() => goMain(navigation, 'Home')} />
-      {carregando ? <Card><ActivityIndicator color={colors.blue} /><Text style={[ui.subtitle, { textAlign: 'center', marginTop: 12 }]}>Carregando perfil...</Text></Card> : usuario ? <Card style={{ gap: 18 }}>
-        <View style={{ alignItems: 'center', gap: 12 }}>
-          <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#EAF2FF', alignItems: 'center', justifyContent: 'center' }}><Ionicons name="person-outline" size={38} color={colors.blue} /></View>
-          <Text style={[ui.title, { textAlign: 'center' }]}>Olá, {usuario.nome}!</Text>
-          <Text style={ui.subtitle}>Que bom ter você na comunidade.</Text>
+      {carregando ? (
+        <Card>
+          <ActivityIndicator color={colors.blue} />
+          <Text style={[ui.subtitle, { textAlign: 'center', marginTop: 12 }]}>
+            Carregando perfil...
+          </Text>
+        </Card>
+      ) : usuario ? (
+        <Card style={{ gap: 18 }}>
+          <View style={{ alignItems: 'center', gap: 12 }}>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: '#EAF2FF',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="person-outline" size={38} color={colors.blue} />
+            </View>
+            <Text style={[ui.title, { textAlign: 'center' }]}>Olá, {usuario.nome}!</Text>
+            <Text style={ui.subtitle}>Que bom ter você na comunidade.</Text>
+          </View>
+          {[
+            ['E-mail', usuario.email],
+            ['Telefone', usuario.telefone || 'Não informado'],
+            ['Voluntário', usuario.eh_voluntario ? 'Sim' : 'Não'],
+            ['Status', usuario.status_verificacao],
+          ].map(([label, value]) => (
+            <View
+              key={label}
+              style={{ borderTopWidth: 1, borderColor: colors.line, paddingTop: 14 }}
+            >
+              <Text style={ui.label}>{label}</Text>
+              <Text selectable style={ui.subtitle}>
+                {value}
+              </Text>
+            </View>
+          ))}
+          {usuario.eh_voluntario && (
+            <Text style={ui.subtitle}>
+              {usuario.reputacao
+                ? usuario.reputacao.media.toFixed(1) +
+                  ' / 5 · ' +
+                  usuario.reputacao.quantidade +
+                  ' avaliações'
+                : 'Ainda sem avaliações recebidas'}
+            </Text>
+          )}
+        </Card>
+      ) : (
+        <Card>
+          <Text style={ui.subtitle}>
+            Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.
+          </Text>
+          <Button
+            style={{ marginTop: 16 }}
+            title="Tentar novamente"
+            onPress={() => setTentativa((value) => value + 1)}
+          />
+        </Card>
+      )}
+      {usuario?.eh_voluntario && (
+        <View style={ui.row}>
+          <Text style={ui.label}>Disponível para ajudar</Text>
+          <Switch
+            accessibilityLabel="Disponível para ajudar"
+            value={!!usuario.disponivel}
+            onValueChange={async (disponivel) => {
+              try {
+                await api.put('/minha-disponibilidade', { disponivel });
+                setUsuario((u) => ({ ...u, disponivel }));
+              } catch {
+                Alert.alert('Não foi possível atualizar a disponibilidade.');
+              }
+            }}
+          />
         </View>
-        {[['E-mail', usuario.email], ['Telefone', usuario.telefone || 'Não informado'], ['Voluntário', usuario.eh_voluntario ? 'Sim' : 'Não'], ['Status', usuario.status_verificacao]].map(([label, value]) => <View key={label} style={{ borderTopWidth: 1, borderColor: colors.line, paddingTop: 14 }}><Text style={ui.label}>{label}</Text><Text selectable style={ui.subtitle}>{value}</Text></View>)}
-        {usuario.eh_voluntario&&<Text style={ui.subtitle}>{usuario.reputacao?usuario.reputacao.media.toFixed(1)+' / 5 · '+usuario.reputacao.quantidade+' avaliações':'Ainda sem avaliações recebidas'}</Text>}
-      </Card> : <Card><Text style={ui.subtitle}>Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.</Text><Button style={{ marginTop: 16 }} title="Tentar novamente" onPress={() => setTentativa(value => value + 1)} /></Card>}
-      {usuario?.eh_voluntario&&<View style={ui.row}><Text style={ui.label}>Disponível para ajudar</Text><Switch accessibilityLabel="Disponível para ajudar" value={!!usuario.disponivel} onValueChange={async disponivel=>{try{await api.put('/minha-disponibilidade',{disponivel});setUsuario(u=>({...u,disponivel}))}catch{Alert.alert('Não foi possível atualizar a disponibilidade.')}}}/></View>}
-      <Text style={ui.section}>MINHA CONTA</Text><ListRow icon="create-outline" title="Editar perfil" onPress={()=>navigation.navigate('EditarPerfil')}/><ListRow icon="people-outline" title="Meus contatos de emergência" onPress={()=>navigation.navigate('ContatosEmergencia')}/><ListRow icon="location-outline" title="Meu endereço" onPress={()=>navigation.navigate('MeuEndereco')} />
-      <ListRow icon="notifications-outline" title="Permissão de notificações" onPress={()=>navigation.navigate('NotificationSettings')} />
-      <ListRow icon="lock-closed-outline" title="Trocar senha" onPress={() => navigation.navigate('TrocarSenha')} />
+      )}
+      <Text style={ui.section}>MINHA CONTA</Text>
+      <ListRow
+        icon="create-outline"
+        title="Editar perfil"
+        onPress={() => navigation.navigate('EditarPerfil')}
+      />
+      <ListRow
+        icon="people-outline"
+        title="Meus contatos de emergência"
+        onPress={() => navigation.navigate('ContatosEmergencia')}
+      />
+      <ListRow
+        icon="location-outline"
+        title="Meu endereço"
+        onPress={() => navigation.navigate('MeuEndereco')}
+      />
+      <ListRow
+        icon="notifications-outline"
+        title="Permissão de notificações"
+        onPress={() => navigation.navigate('NotificationSettings')}
+      />
+      <ListRow
+        icon="lock-closed-outline"
+        title="Trocar senha"
+        onPress={() => navigation.navigate('TrocarSenha')}
+      />
       <Button title="Sair da conta" tone="soft" onPress={sair} />
-      <Button title={excluindo ? 'Excluindo...' : 'Excluir conta'} tone="red" disabled={excluindo} onPress={confirmarExclusao} />
+      <Button
+        title={excluindo ? 'Excluindo...' : 'Excluir conta'}
+        tone="red"
+        disabled={excluindo}
+        onPress={confirmarExclusao}
+      />
     </Screen>
   );
 }

@@ -14,12 +14,14 @@ import api from '../services/api';
 import { Screen } from '../components/UI';
 import { limparSessao } from '../services/authStorage';
 
+// Renderiza a tela TrocarSenha.
 export default function TrocarSenhaScreen({ navigation }) {
   const [senhaAtual, setSenhaAtual] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
 
+  // Confere a senha atual antes de solicitar ou persistir a nova senha.
   async function trocarSenha() {
     if (!senhaAtual || !novaSenha || !confirmarNovaSenha) {
       Alert.alert('Atenção', 'Preencha todos os campos.');
@@ -72,53 +74,50 @@ export default function TrocarSenhaScreen({ navigation }) {
 
   return (
     <Screen title="Trocar senha" navigation={navigation} back active="Perfil">
-        <View style={styles.card}>
-          <Text style={styles.title}>Trocar senha</Text>
-          <Text style={styles.subtitle}>Informe sua senha atual e a nova.</Text>
+      <View style={styles.card}>
+        <Text style={styles.title}>Trocar senha</Text>
+        <Text style={styles.subtitle}>Informe sua senha atual e a nova.</Text>
 
-          <Text style={styles.label}>Senha atual</Text>
-          <TextInput
-            style={styles.input}
-            value={senhaAtual}
-            onChangeText={setSenhaAtual}
-            placeholder="Digite a senha atual"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
+        <Text style={styles.label}>Senha atual</Text>
+        <TextInput
+          style={styles.input}
+          value={senhaAtual}
+          onChangeText={setSenhaAtual}
+          placeholder="Digite a senha atual"
+          placeholderTextColor="#8A94A6"
+          secureTextEntry
+        />
 
-          <Text style={styles.label}>Nova senha</Text>
-          <TextInput
-            style={styles.input}
-            value={novaSenha}
-            onChangeText={setNovaSenha}
-            placeholder="Digite a nova senha"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
+        <Text style={styles.label}>Nova senha</Text>
+        <TextInput
+          style={styles.input}
+          value={novaSenha}
+          onChangeText={setNovaSenha}
+          placeholder="Digite a nova senha"
+          placeholderTextColor="#8A94A6"
+          secureTextEntry
+        />
 
-          <Text style={styles.label}>Confirmar nova senha</Text>
-          <TextInput
-            style={styles.input}
-            value={confirmarNovaSenha}
-            onChangeText={setConfirmarNovaSenha}
-            placeholder="Digite a nova senha novamente"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
+        <Text style={styles.label}>Confirmar nova senha</Text>
+        <TextInput
+          style={styles.input}
+          value={confirmarNovaSenha}
+          onChangeText={setConfirmarNovaSenha}
+          placeholder="Digite a nova senha novamente"
+          placeholderTextColor="#8A94A6"
+          secureTextEntry
+        />
 
-          <Pressable
-            style={[
-              styles.primaryButton,
-              carregando && styles.primaryButtonDisabled,
-            ]}
-            onPress={trocarSenha}
-            disabled={carregando}
-          >
-            <Text style={styles.primaryButtonText}>
-              {carregando ? 'Alterando...' : 'Alterar senha'}
-            </Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={[styles.primaryButton, carregando && styles.primaryButtonDisabled]}
+          onPress={trocarSenha}
+          disabled={carregando}
+        >
+          <Text style={styles.primaryButtonText}>
+            {carregando ? 'Alterando...' : 'Alterar senha'}
+          </Text>
+        </Pressable>
+      </View>
     </Screen>
   );
 }

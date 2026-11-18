@@ -14,6 +14,7 @@ import {
 import api from '../services/api';
 import { Screen } from '../components/UI';
 
+// Renderiza a tela Cadastro.
 export default function CadastroScreen({ navigation }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -23,6 +24,7 @@ export default function CadastroScreen({ navigation }) {
   const [ehVoluntario, setEhVoluntario] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
+  // Valida os dados de cadastro antes de criar a conta.
   async function cadastrar() {
     try {
       setCarregando(true);
@@ -51,89 +53,86 @@ export default function CadastroScreen({ navigation }) {
 
   return (
     <Screen title="Cadastro" navigation={navigation} back auth>
-        <Text style={styles.title}>Criar conta</Text>
-        <Text style={styles.subtitle}>Preencha seus dados para começar.</Text>
+      <Text style={styles.title}>Criar conta</Text>
+      <Text style={styles.subtitle}>Preencha seus dados para começar.</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Nome</Text>
-          <TextInput
-            style={styles.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholder="Nome completo"
-            placeholderTextColor="#8A94A6"
-            autoCapitalize="words"
+      <View style={styles.card}>
+        <Text style={styles.label}>Nome</Text>
+        <TextInput
+          style={styles.input}
+          value={nome}
+          onChangeText={setNome}
+          placeholder="Nome completo"
+          placeholderTextColor="#8A94A6"
+          autoCapitalize="words"
+        />
+
+        <Text style={styles.label}>E-mail</Text>
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="seu@email.com"
+          placeholderTextColor="#8A94A6"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+
+        <Text style={styles.label}>Telefone</Text>
+        <TextInput
+          style={styles.input}
+          value={telefone}
+          onChangeText={setTelefone}
+          placeholder="(00) 00000-0000"
+          placeholderTextColor="#8A94A6"
+          keyboardType="phone-pad"
+        />
+
+        <Text style={styles.label}>Senha</Text>
+        <TextInput
+          style={styles.input}
+          value={senha}
+          onChangeText={setSenha}
+          placeholder="Digite sua senha"
+          placeholderTextColor="#8A94A6"
+          secureTextEntry
+        />
+
+        <Text style={styles.label}>Confirmar senha</Text>
+        <TextInput
+          style={styles.input}
+          value={confirmarSenha}
+          onChangeText={setConfirmarSenha}
+          placeholder="Digite a senha novamente"
+          placeholderTextColor="#8A94A6"
+          secureTextEntry
+        />
+
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Quero atuar como voluntário</Text>
+          <Switch
+            value={ehVoluntario}
+            onValueChange={setEhVoluntario}
+            trackColor={{ false: '#CBD5E1', true: '#A7C5FF' }}
+            thumbColor={ehVoluntario ? '#2876E7' : '#F8FAFC'}
           />
-
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="seu@email.com"
-            placeholderTextColor="#8A94A6"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-
-          <Text style={styles.label}>Telefone</Text>
-          <TextInput
-            style={styles.input}
-            value={telefone}
-            onChangeText={setTelefone}
-            placeholder="(00) 00000-0000"
-            placeholderTextColor="#8A94A6"
-            keyboardType="phone-pad"
-          />
-
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            value={senha}
-            onChangeText={setSenha}
-            placeholder="Digite sua senha"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
-
-          <Text style={styles.label}>Confirmar senha</Text>
-          <TextInput
-            style={styles.input}
-            value={confirmarSenha}
-            onChangeText={setConfirmarSenha}
-            placeholder="Digite a senha novamente"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Quero atuar como voluntário</Text>
-            <Switch
-              value={ehVoluntario}
-              onValueChange={setEhVoluntario}
-              trackColor={{ false: '#CBD5E1', true: '#A7C5FF' }}
-              thumbColor={ehVoluntario ? '#2876E7' : '#F8FAFC'}
-            />
-          </View>
-
-          <Pressable
-            style={[
-              styles.primaryButton,
-              carregando && styles.primaryButtonDisabled,
-            ]}
-            onPress={cadastrar}
-            disabled={carregando}
-          >
-            <Text style={styles.primaryButtonText}>
-              {carregando ? 'Cadastrando...' : 'Cadastrar'}
-            </Text>
-          </Pressable>
-
-          <Pressable onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.link}>Já tem uma conta? Voltar ao login</Text>
-          </Pressable>
         </View>
+
+        <Pressable
+          style={[styles.primaryButton, carregando && styles.primaryButtonDisabled]}
+          onPress={cadastrar}
+          disabled={carregando}
+        >
+          <Text style={styles.primaryButtonText}>
+            {carregando ? 'Cadastrando...' : 'Cadastrar'}
+          </Text>
+        </Pressable>
+
+        <Pressable onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.link}>Já tem uma conta? Voltar ao login</Text>
+        </Pressable>
+      </View>
     </Screen>
   );
 }

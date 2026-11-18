@@ -15,12 +15,14 @@ import { salvarSessao } from '../services/authStorage';
 import { Header } from '../components/UI';
 import { useDemo } from '../context/DemoContext';
 
+// Renderiza a tela Login.
 export default function LoginScreen({ navigation }) {
   const { resetDemo } = useDemo();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
 
+  // Autentica, salva a sessão e encaminha o usuário ao aplicativo.
   async function entrar() {
     try {
       setCarregando(true);
@@ -48,59 +50,59 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-    <Header title="Help Us" navigation={navigation} auth />
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+      <Header title="Help Us" navigation={navigation} auth />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.card}>
-          <Text style={styles.title}>Login</Text>
-          <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.card}>
+            <Text style={styles.title}>Login</Text>
+            <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
 
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="seu@email.com"
-            placeholderTextColor="#8A94A6"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+            <Text style={styles.label}>E-mail</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="seu@email.com"
+              placeholderTextColor="#8A94A6"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
 
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            value={senha}
-            onChangeText={setSenha}
-            placeholder="Digite sua senha"
-            placeholderTextColor="#8A94A6"
-            secureTextEntry
-          />
+            <Text style={styles.label}>Senha</Text>
+            <TextInput
+              style={styles.input}
+              value={senha}
+              onChangeText={setSenha}
+              placeholder="Digite sua senha"
+              placeholderTextColor="#8A94A6"
+              secureTextEntry
+            />
 
-          <Pressable
-            style={[
-              styles.primaryButton,
-              carregando && styles.primaryButtonDisabled,
-            ]}
-            onPress={entrar}
-            disabled={carregando}
-          >
-            <Text style={styles.primaryButtonText}>
-              {carregando ? 'Entrando...' : 'Entrar'}
-            </Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Cadastro')}>
-            <Text style={styles.link}>Não tenho conta</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Pressable
+              style={[styles.primaryButton, carregando && styles.primaryButtonDisabled]}
+              onPress={entrar}
+              disabled={carregando}
+            >
+              <Text style={styles.primaryButtonText}>
+                {carregando ? 'Entrando...' : 'Entrar'}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Cadastro')}
+            >
+              <Text style={styles.link}>Não tenho conta</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

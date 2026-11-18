@@ -1,16 +1,33 @@
 // Política compartilhável com o futuro serviço de atendimentos. Não grava aceite.
 const ativos = ['aberta', 'em_atendimento'];
-const voluntario = user => Number(user.eh_voluntario) === 1;
+const voluntario = (user) => Number(user.eh_voluntario) === 1;
 const proprio = (user, row) => Number(row.id_solicitante) === Number(user.id_usuario);
+// Restringe consulta conforme autoria e habilitação de voluntário.
 function podeConsultar(user, row) {
-  return proprio(user, row) || (voluntario(user) && (ativos.includes(row.status) || ['aceito', 'finalizado', 'desistiu', 'cancelado'].includes(row.atendimento_status)));
+  return (
+    proprio(user, row) ||
+    (voluntario(user) &&
+      (ativos.includes(row.status) ||
+        ['aceito', 'finalizado', 'desistiu', 'cancelado'].includes(
+          row.atendimento_status,
+        )))
+  );
 }
+// Distingue autoria e consentimento do acesso público à ocorrência.
 function podeVerPrivado(user, row) {
-  return proprio(user, row) || (voluntario(user) && row.privado_autorizado === true && row.atendimento_status === 'aceito' && ativos.includes(row.status));
+  return (
+    proprio(user, row) ||
+    (voluntario(user) &&
+      row.privado_autorizado === true &&
+      row.atendimento_status === 'aceito' &&
+      ativos.includes(row.status))
+  );
 }
+// Exclui pedidos próprios e indisponíveis das oportunidades de aceite.
 function elegivelParaAceitar(user, row) {
   return voluntario(user) && !proprio(user, row) && row.status === 'aberta';
 }
+// Reduz a precisão da posição exibida sem autorização privada.
 function coordenada(value, max, aproximada) {
   if (value == null) return null;
   const number = Number(value);
@@ -21,17 +38,32 @@ function coordenada(value, max, aproximada) {
 function dto(user, row) {
   const privado = podeVerPrivado(user, row);
   return {
-    id_ocorrencia: row.id_ocorrencia, id_tipo: row.id_tipo, nome_tipo: row.nome_tipo,
+    id_ocorrencia: row.id_ocorrencia,
+    id_tipo: row.id_tipo,
+    nome_tipo: row.nome_tipo,
     ...(privado ? { id_solicitante: row.id_solicitante } : {}),
     titulo: privado ? row.titulo : 'Pedido de ajuda: ' + row.nome_tipo,
     descricao: privado ? row.descricao : null,
     endereco_referencia: privado ? row.endereco_referencia : null,
-    nivel_urgencia: row.nivel_urgencia, status: row.status,
-    latitude: coordenada(row.latitude, 90, !privado), longitude: coordenada(row.longitude, 180, !privado),
-    criada_em: row.criada_em, atualizada_em: row.atualizada_em,
-    meu_pedido: proprio(user, row), localizacao_aproximada: !privado,
-    endereco_disponivel: privado, descricao_restrita: !privado,
+    nivel_urgencia: row.nivel_urgencia,
+    status: row.status,
+    latitude: coordenada(row.latitude, 90, !privado),
+    longitude: coordenada(row.longitude, 180, !privado),
+    criada_em: row.criada_em,
+    atualizada_em: row.atualizada_em,
+    meu_pedido: proprio(user, row),
+    localizacao_aproximada: !privado,
+    endereco_disponivel: privado,
+    descricao_restrita: !privado,
     elegivel_para_aceite_futuro: elegivelParaAceitar(user, row),
   };
 }
-module.exports = { ativos, voluntario, proprio, podeConsultar, podeVerPrivado, elegivelParaAceitar, dto };
+module.exports = {
+  ativos,
+  voluntario,
+  proprio,
+  podeConsultar,
+  podeVerPrivado,
+  elegivelParaAceitar,
+  dto,
+};

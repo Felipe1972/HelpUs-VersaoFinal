@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const usuarioService = require('../services/usuarioService');
 
+// Valida os dados de cadastro antes de criar a conta.
 async function cadastrar(request, response) {
   try {
     const {
@@ -26,7 +27,9 @@ async function cadastrar(request, response) {
     }
 
     if (!confirmarSenha || typeof confirmarSenha !== 'string') {
-      return response.status(400).json({ mensagem: 'Confirmação de senha é obrigatória' });
+      return response
+        .status(400)
+        .json({ mensagem: 'Confirmação de senha é obrigatória' });
     }
 
     if (senha !== confirmarSenha) {
@@ -69,6 +72,7 @@ async function cadastrar(request, response) {
   }
 }
 
+// Valida credenciais e emite JWT para a conta autenticada.
 async function login(request, response) {
   try {
     const { email, senha } = request.body;
@@ -120,6 +124,7 @@ async function login(request, response) {
   }
 }
 
+// Retorna somente o perfil correspondente ao JWT.
 async function obterUsuarioLogado(request, response) {
   try {
     const usuario = await usuarioService.buscarPorId(request.usuario.id_usuario);
@@ -135,6 +140,7 @@ async function obterUsuarioLogado(request, response) {
   }
 }
 
+// Confere a senha atual antes de solicitar ou persistir a nova senha.
 async function trocarSenha(request, response) {
   try {
     const { senhaAtual, novaSenha, confirmarNovaSenha } = request.body;
@@ -157,18 +163,13 @@ async function trocarSenha(request, response) {
       return response.status(400).json({ mensagem: 'As novas senhas não coincidem' });
     }
 
-    const usuario = await usuarioService.buscarCompletoPorId(
-      request.usuario.id_usuario,
-    );
+    const usuario = await usuarioService.buscarCompletoPorId(request.usuario.id_usuario);
 
     if (!usuario) {
       return response.status(404).json({ mensagem: 'Usuário não encontrado' });
     }
 
-    const senhaAtualCorreta = await bcrypt.compare(
-      senhaAtual,
-      usuario.senha_hash,
-    );
+    const senhaAtualCorreta = await bcrypt.compare(senhaAtual, usuario.senha_hash);
 
     if (!senhaAtualCorreta) {
       return response.status(401).json({ mensagem: 'Senha atual incorreta' });
@@ -193,6 +194,7 @@ async function trocarSenha(request, response) {
   }
 }
 
+// Executa a exclusão da conta pelo fluxo autenticado.
 async function excluirConta(request, response) {
   try {
     const idUsuario = request.usuario.id_usuario;

@@ -1,1 +1,12 @@
-require('dotenv').config({quiet:true});const p=require('../src/config/database');(async()=>{try{if(process.env.DB_NAME!=='help_us2')throw Error('Banco inesperado');if(!(await p.query("SHOW COLUMNS FROM mensagem LIKE 'lida_em'"))[0].length)await p.query('ALTER TABLE mensagem ADD COLUMN lida_em DATETIME NULL');console.log('Leitura pronta; campos anteriores preservados.')}finally{await p.end()}})();
+require('dotenv').config({ quiet: true });
+const p = require('../src/config/database');
+(async () => {
+  try {
+    if (process.env.DB_NAME !== 'help_us2') throw Error('Banco inesperado');
+    if (!(await p.query("SHOW COLUMNS FROM mensagem LIKE 'lida_em'"))[0].length)
+      await p.query('ALTER TABLE mensagem ADD COLUMN lida_em DATETIME NULL');
+    console.log('Leitura pronta; campos anteriores preservados.');
+  } finally {
+    await p.end();
+  }
+})();

@@ -1,31 +1,74 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const policy = require('../src/services/ocorrenciaPermissoes');
-const { exigirElegibilidadeParaAtendimento } = require('../src/services/ocorrenciaService');
+const {
+  exigirElegibilidadeParaAtendimento,
+} = require('../src/services/ocorrenciaService');
 const common = { id_usuario: 1, eh_voluntario: 0 };
 const volunteer = { id_usuario: 2, eh_voluntario: 1 };
-const row = { id_ocorrencia: 1, id_solicitante: 1, id_tipo: 1, nome_tipo: 'Queda', titulo: 'Endereço privado no título', descricao: 'Endereço privado na descrição', endereco_referencia: 'Rua privada, 123', latitude: '-29.99912345', longitude: '-51.00123456', status: 'aberta', nivel_urgencia: 'media', telefone: 'privado', senha_hash: 'privado' };
+const row = {
+  id_ocorrencia: 1,
+  id_solicitante: 1,
+  id_tipo: 1,
+  nome_tipo: 'Queda',
+  titulo: 'Endereço privado no título',
+  descricao: 'Endereço privado na descrição',
+  endereco_referencia: 'Rua privada, 123',
+  latitude: '-29.99912345',
+  longitude: '-51.00123456',
+  status: 'aberta',
+  nivel_urgencia: 'media',
+  telefone: 'privado',
+  senha_hash: 'privado',
+};
 test('somente proprietário ou voluntário autorizado consulta; aceite futuro nunca aceita próprio pedido', () => {
   assert(policy.podeConsultar(common, row));
   assert(!policy.podeConsultar({ ...common, id_usuario: 3 }, row));
   assert(policy.podeConsultar(volunteer, row));
   assert(!policy.podeConsultar(volunteer, { ...row, status: 'finalizada' }));
   assert.throws(() => exigirElegibilidadeParaAtendimento(common, row));
-  assert.throws(() => exigirElegibilidadeParaAtendimento({ ...common, eh_voluntario: 1 }, row));
-  assert.throws(() => exigirElegibilidadeParaAtendimento(volunteer, { ...row, status: 'em_atendimento' }));
+  assert.throws(() =>
+    exigirElegibilidadeParaAtendimento({ ...common, eh_voluntario: 1 }, row),
+  );
+  assert.throws(() =>
+    exigirElegibilidadeParaAtendimento(volunteer, { ...row, status: 'em_atendimento' }),
+  );
   exigirElegibilidadeParaAtendimento(volunteer, row);
 });
 test('projeção pública não vaza texto livre, identidade, endereço nem coordenada exata', () => {
   const publicItem = policy.dto(volunteer, row);
-  assert.equal(publicItem.latitude, -30); assert.equal(publicItem.longitude, -51);
-  assert.equal(publicItem.descricao, null); assert.equal(publicItem.endereco_referencia, null);
-  assert(!('id_solicitante' in publicItem)); assert(!('telefone' in publicItem)); assert(!('senha_hash' in publicItem));
+  assert.equal(publicItem.latitude, -30);
+  assert.equal(publicItem.longitude, -51);
+  assert.equal(publicItem.descricao, null);
+  assert.equal(publicItem.endereco_referencia, null);
+  assert(!('id_solicitante' in publicItem));
+  assert(!('telefone' in publicItem));
+  assert(!('senha_hash' in publicItem));
   assert(!JSON.stringify(publicItem).includes('privado'));
-  const own = policy.dto(common, row); assert.equal(own.latitude, -29.99912345); assert.equal(own.descricao, row.descricao);
-  assert.equal(policy.dto(volunteer,{...row,atendimento_status:'aceito'}).endereco_disponivel,false);
-  const accepted = policy.dto(volunteer, { ...row, atendimento_status: 'aceito', privado_autorizado:true });
-  assert.equal(accepted.endereco_referencia, row.endereco_referencia); assert.equal(accepted.localizacao_aproximada, false);
-  for(const status of ['finalizada', 'cancelada']) assert.equal(policy.dto(volunteer, { ...row, status, atendimento_status: 'aceito' }).endereco_disponivel, false);
-  assert.equal(policy.dto(volunteer, { ...row, atendimento_status: 'finalizado' }).endereco_disponivel, false);
+  const own = policy.dto(common, row);
+  assert.equal(own.latitude, -29.99912345);
+  assert.equal(own.descricao, row.descricao);
+  assert.equal(
+    policy.dto(volunteer, { ...row, atendimento_status: 'aceito' }).endereco_disponivel,
+    false,
+  );
+  const accepted = policy.dto(volunteer, {
+    ...row,
+    atendimento_status: 'aceito',
+    privado_autorizado: true,
+  });
+  assert.equal(accepted.endereco_referencia, row.endereco_referencia);
+  assert.equal(accepted.localizacao_aproximada, false);
+  for (const status of ['finalizada', 'cancelada'])
+    assert.equal(
+      policy.dto(volunteer, { ...row, status, atendimento_status: 'aceito' })
+        .endereco_disponivel,
+      false,
+    );
+  assert.equal(
+    policy.dto(volunteer, { ...row, atendimento_status: 'finalizado' })
+      .endereco_disponivel,
+    false,
+  );
   assert.equal(policy.dto(volunteer, { ...row, latitude: null }).latitude, null);
 });

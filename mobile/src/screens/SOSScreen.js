@@ -1,2 +1,99 @@
-import {useCallback,useState} from 'react';import {useFocusEffect} from '@react-navigation/native';import {Text,Linking,Alert} from 'react-native';import {Screen,Card,Button,ui} from '../components/UI';import api from '../services/api';import {formatPhone,openDialer} from '../services/phone';
-export default function SOSScreen({navigation}){const [items,setItems]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true),[tick,setTick]=useState(0);useFocusEffect(useCallback(()=>{let live=true;setLoading(true);setError('');api.get('/meus-contatos').then(({data})=>{if(live)setItems(data.contatos)}).catch(()=>{if(live)setError('Não foi possível carregar seus contatos.')}).finally(()=>{if(live)setLoading(false)});return()=>{live=false;setItems([])}},[tick]));async function call(n){try{await openDialer(Linking,n)}catch{Alert.alert('Discador indisponível','Não foi possível abrir o discador. Use o telefone exibido.')}}return <Screen title="Emergência / SOS" navigation={navigation} back active="Home"><Card style={{gap:12}}><Text style={ui.title}>Central de contatos</Text><Text style={ui.subtitle}>O Help Us não aciona automaticamente serviços de emergência. Ao tocar em Ligar, o discador será aberto. Você decide se deseja realizar a chamada; abrir o discador não significa que uma equipe foi acionada.</Text></Card><Text style={ui.section}>MEUS CONTATOS DE EMERGÊNCIA</Text>{loading&&<Text>Carregando contatos…</Text>}{!!error&&<><Text>{error}</Text><Button title="Tentar novamente" onPress={()=>setTick(t=>t+1)}/></>}{items.map(c=><Card key={c.id_contato} style={{gap:10}}><Text style={ui.label}>{c.nome} · {c.parentesco}</Text><Text style={ui.subtitle}>{formatPhone(c.telefone)}</Text><Button title={'Ligar para '+c.nome} tone="soft" onPress={()=>call(c.telefone)}/></Card>)}{!loading&&!error&&!items.length&&<Text style={ui.subtitle}>Você ainda não cadastrou contatos de emergência.</Text>}<Button title="Cadastrar ou editar contatos" tone="soft" onPress={()=>navigation.navigate('ContatosEmergencia')}/><Text style={ui.section}>SERVIÇOS DE EMERGÊNCIA</Text>{[['SAMU','192'],['Corpo de Bombeiros','193'],['Polícia Militar','190']].map(([name,n])=><Button key={n} title={name+' — '+n+' · Ligar'} tone="soft" onPress={()=>call(n)}/>)}</Screen>}
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { Text, Linking, Alert } from 'react-native';
+import { Screen, Card, Button, ui } from '../components/UI';
+import api from '../services/api';
+import { formatPhone, openDialer } from '../services/phone';
+// Renderiza os contatos próprios e o acesso ao discador.
+export default function SOSScreen({ navigation }) {
+  const [items, setItems] = useState([]),
+    [error, setError] = useState(''),
+    [loading, setLoading] = useState(true),
+    [tick, setTick] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      setLoading(true);
+      setError('');
+      api
+        .get('/meus-contatos')
+        .then(({ data }) => {
+          if (live) setItems(data.contatos);
+        })
+        .catch(() => {
+          if (live) setError('Não foi possível carregar seus contatos.');
+        })
+        .finally(() => {
+          if (live) setLoading(false);
+        });
+      return () => {
+        live = false;
+        setItems([]);
+      };
+    }, [tick]),
+  );
+  async function call(n) {
+    try {
+      await openDialer(Linking, n);
+    } catch {
+      Alert.alert(
+        'Discador indisponível',
+        'Não foi possível abrir o discador. Use o telefone exibido.',
+      );
+    }
+  }
+  return (
+    <Screen title="Emergência / SOS" navigation={navigation} back active="Home">
+      <Card style={{ gap: 12 }}>
+        <Text style={ui.title}>Central de contatos</Text>
+        <Text style={ui.subtitle}>
+          O Help Us não aciona automaticamente serviços de emergência. Ao tocar em Ligar,
+          o discador será aberto. Você decide se deseja realizar a chamada; abrir o
+          discador não significa que uma equipe foi acionada.
+        </Text>
+      </Card>
+      <Text style={ui.section}>MEUS CONTATOS DE EMERGÊNCIA</Text>
+      {loading && <Text>Carregando contatos…</Text>}
+      {!!error && (
+        <>
+          <Text>{error}</Text>
+          <Button title="Tentar novamente" onPress={() => setTick((t) => t + 1)} />
+        </>
+      )}
+      {items.map((c) => (
+        <Card key={c.id_contato} style={{ gap: 10 }}>
+          <Text style={ui.label}>
+            {c.nome} · {c.parentesco}
+          </Text>
+          <Text style={ui.subtitle}>{formatPhone(c.telefone)}</Text>
+          <Button
+            title={'Ligar para ' + c.nome}
+            tone="soft"
+            onPress={() => call(c.telefone)}
+          />
+        </Card>
+      ))}
+      {!loading && !error && !items.length && (
+        <Text style={ui.subtitle}>Você ainda não cadastrou contatos de emergência.</Text>
+      )}
+      <Button
+        title="Cadastrar ou editar contatos"
+        tone="soft"
+        onPress={() => navigation.navigate('ContatosEmergencia')}
+      />
+      <Text style={ui.section}>SERVIÇOS DE EMERGÊNCIA</Text>
+      {[
+        ['SAMU', '192'],
+        ['Corpo de Bombeiros', '193'],
+        ['Polícia Militar', '190'],
+      ].map(([name, n]) => (
+        <Button
+          key={n}
+          title={name + ' — ' + n + ' · Ligar'}
+          tone="soft"
+          onPress={() => call(n)}
+        />
+      ))}
+    </Screen>
+  );
+}

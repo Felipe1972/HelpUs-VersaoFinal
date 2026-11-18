@@ -16,7 +16,8 @@ app.use(require('./routes/acompanhamentoRoutes'));
 
 app.get('/status', (request, response) => {
   return response.status(200).json({
-    status: 'ok', versao: 'helpus-finalizacao-v1',
+    status: 'ok',
+    versao: 'helpus-finalizacao-v1',
     mensagem: 'Backend Help Us funcionando',
   });
 });

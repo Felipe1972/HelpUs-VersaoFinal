@@ -9,6 +9,8 @@ router.post('/login', usuarioController.login);
 router.get('/me', autenticar, usuarioController.obterUsuarioLogado);
 router.put('/me/senha', autenticar, usuarioController.trocarSenha);
 router.delete('/me', autenticar, usuarioController.excluirConta);
-router.get('/', autenticar, (_req,res)=>res.status(403).json({mensagem:'Diretório de usuários indisponível.'}));
+router.get('/', autenticar, (_req, res) =>
+  res.status(403).json({ mensagem: 'Diretório de usuários indisponível.' }),
+);
 
 module.exports = router;

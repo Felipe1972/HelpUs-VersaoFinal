@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 // Usa HTTP, ws e MySQL reais. Insere somente registros novos identificados; não exclui registros.
 require('dotenv').config({ quiet: true });
 const assert = require('node:assert/strict');
@@ -77,8 +78,8 @@ async function run() {
     const finished = await occurrence(a, b, 'finalizada', 'finalizado');
     const cancelled = await occurrence(a, b, 'cancelada');
     const refused = await occurrence(a, b, 'aberta', 'recusado');
-    if(fs.existsSync('.chat-test.local.json'))fs.copyFileSync('.chat-test.local.json','.chat-test.previous-'+runId+'.local.json');
-    fs.writeFileSync(path.resolve(__dirname, '../.chat-test.local.json'), JSON.stringify({ run: runId, senha: password, contas: users.map(u => ({ id_usuario: u.id_usuario, nome: u.nome, email: u.email })), ocorrencia_principal: first, ocorrencia_papeis_invertidos: reverse }, null, 2));
+    if(fs.existsSync(testArtifact('.chat-test.local.json')))fs.copyFileSync(testArtifact('.chat-test.local.json'),testArtifact('.chat-test.previous-'+runId+'.local.json'));
+    fs.writeFileSync(testArtifact('.chat-test.local.json'), JSON.stringify({ run: runId, senha: password, contas: users.map(u => ({ id_usuario: u.id_usuario, nome: u.nome, email: u.email })), ocorrencia_principal: first, ocorrencia_papeis_invertidos: reverse }, null, 2));
 
     const sa = await connect(a.token), sb = await connect(b.token), sc = await connect(c.token), sd = await connect(d.token);
     const send = (client, to, occurrenceId, text, id) => client.send({ type: 'chat_message', request_id: id, id_conversa: conversations.get(occurrenceId), text });
@@ -168,7 +169,7 @@ async function run() {
     const [messages] = await pool.query('SELECT id_mensagem,id_ocorrencia,id_remetente,id_destinatario,texto,enviada_em FROM mensagem WHERE id_ocorrencia IN (?,?) ORDER BY id_mensagem', [first, reverse]);
     report.mensagens = messages.map(m => m.id_mensagem);
     console.log(JSON.stringify(report, null, 2));
-    console.log('PASS: integração real HTTP + WebSocket + MySQL. Credenciais de teste em backend/.chat-test.local.json (ignorado pelo Git).');
+    console.log('PASS: integração real HTTP + WebSocket + MySQL. Credenciais de teste em .private-backups/execucoes-testes/backend/.chat-test.local.json (ignorado pelo Git).');
   } finally {
     sockets.forEach(socket => socket.terminate()); chatServer.close();
     await new Promise(resolve => server.close(resolve)); await pool.end();

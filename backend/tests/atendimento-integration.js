@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 require('dotenv').config({quiet:true});
 const assert=require('node:assert/strict'),fs=require('fs'),crypto=require('crypto'),http=require('http'),jwt=require('jsonwebtoken');
 const {WebSocket}=require('ws'),{once}=require('events');
@@ -7,7 +8,7 @@ const pool=require('../src/config/database'),app=require('../src/app'),attach=re
  const tables=['usuario','ocorrencia','atendimento','mensagem'];const before={};for(const t of tables)before[t]=(await pool.query('SELECT * FROM '+t))[0];
  const server=http.createServer(app),wsServer=attach(server),sockets=[];await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base='http://127.0.0.1:'+server.address().port,run=Date.now(),password='Atendimento!'+crypto.randomBytes(10).toString('hex'),accounts=[];const report={run,contas:accounts,pedidos:[]};
- const save=()=>fs.writeFileSync('.atendimento-test.local.json',JSON.stringify({...report,senha:password},null,2));
+ const save=()=>fs.writeFileSync(testArtifact('.atendimento-test.local.json'),JSON.stringify({...report,senha:password},null,2));
  async function req(method,path,user,body,status=200){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(user?{Authorization:'Bearer '+jwt.sign({id_usuario:user.id_usuario},process.env.JWT_SECRET,{expiresIn:'10m'})}:{})},body:body?JSON.stringify(body):undefined});const b=await r.json();assert.equal(r.status,status,path+': '+JSON.stringify(b));return b}
  try{
  for(let i=0;i<4;i++){const body={nome:'TESTE_ATENDIMENTO_'+run+'_'+i,email:'atendimento.'+run+'.'+i+'@example.invalid',senha:password,confirmarSenha:password,telefone:'51999999999',eh_voluntario:i===1||i===2};const b=await req('POST','/usuarios/cadastro',null,body,201);accounts.push({id_usuario:b.usuario.id_usuario,email:body.email});save()}

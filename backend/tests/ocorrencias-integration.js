@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 // Cria somente pedidos identificados de teste, sem excluir registros.
 require('dotenv').config({ quiet: true });
 const assert = require('node:assert/strict');
@@ -15,7 +16,7 @@ async function run() {
     return { status: response.status, data: await response.json() };
   }
   try {
-    const fixture = require('../.chat-test.local.json'); const user = fixture.contas[0];
+    const fixture = require(testArtifact('.chat-test.local.json')); const user = fixture.contas[0];
     const login = await request('POST', '/usuarios/login', null, { email: user.email, senha: fixture.senha }); assert.equal(login.status, 200);
     const token = login.data.token, uid = login.data.usuario.id_usuario;
     const config = await request('GET', '/tipos-ocorrencia', token); assert.equal(config.status, 200); assert.deepEqual(config.data.urgencias, ['baixa','media','alta']);

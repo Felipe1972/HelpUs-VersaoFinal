@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 // Integração real; somente dados novos identificados. Nunca exclui registros.
 require('dotenv').config({quiet:true});
 const assert=require('node:assert/strict'),fs=require('fs'),crypto=require('crypto'),http=require('http'),jwt=require('jsonwebtoken');
@@ -7,8 +8,8 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  const before={};for(const entry of (await pool.query('SHOW TABLES'))[0]){const t=Object.values(entry)[0];before[t]=(await pool.query('SELECT * FROM `'+t+'`'))[0]}
  const server=http.createServer(app);await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const run=Date.now(),senha='Final!'+crypto.randomBytes(12).toString('hex'),accounts=[],report={run,contas:accounts,pedidos:[],testes:[]};
- if(fs.existsSync('.final-test.local.json'))fs.copyFileSync('.final-test.local.json','.final-test.previous-'+run+'.local.json');
- const save=()=>fs.writeFileSync('.final-test.local.json',JSON.stringify({...report,senha},null,2));
+ if(fs.existsSync(testArtifact('.final-test.local.json')))fs.copyFileSync(testArtifact('.final-test.local.json'),testArtifact('.final-test.previous-'+run+'.local.json'));
+ const save=()=>fs.writeFileSync(testArtifact('.final-test.local.json'),JSON.stringify({...report,senha},null,2));
  const token=u=>jwt.sign({id_usuario:u.id_usuario},process.env.JWT_SECRET,{expiresIn:'15m'});
  async function req(method,path,u,body,expected=200){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',...(u?{Authorization:'Bearer '+token(u)}:{})},body:body?JSON.stringify(body):undefined});const b=await r.json();assert.equal(r.status,expected,path+': '+JSON.stringify(b));return b}
  const addr={rua:'Rua de teste',numero:'10',bairro:'Centro de teste',cidade:'Cidade teste',estado:'RS',cep:'93000-000',sem_numero:false,referencia:'REFERENCIA_PRIVADA',latitude:-29.7654321,longitude:-51.1454321};

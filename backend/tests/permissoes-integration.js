@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 // Integração real: somente novas contas/pedidos identificados. Nenhuma exclusão ou DDL.
 require('dotenv').config({ quiet: true });
 const assert = require('node:assert/strict');
@@ -32,7 +33,7 @@ async function run() {
   const runId = Date.now().toString(); const password = `Permissoes!${crypto.randomBytes(10).toString('hex')}`;
   const report = { run: runId, usuarios: [], ocorrencias: [], testes: [], dados_anteriores_preservados: false };
   const accounts = [];
-  const save = () => fs.writeFileSync('.permissoes-test.local.json', JSON.stringify({ ...report, senha: password, contas: accounts.map(({ id_usuario, nome, email }) => ({ id_usuario, nome, email })) }, null, 2));
+  const save = () => fs.writeFileSync(testArtifact('.permissoes-test.local.json'), JSON.stringify({ ...report, senha: password, contas: accounts.map(({ id_usuario, nome, email }) => ({ id_usuario, nome, email })) }, null, 2));
   async function request(method, url, token, body) {
     const response = await fetch(base + url, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
     return { status: response.status, data: await response.json() };
@@ -96,7 +97,7 @@ async function run() {
     assert.equal((await request('POST','/ocorrencias',a.token,{...body,id_solicitante:b.id_usuario})).status,400);
     report.testes.push('Perfil relido no banco com o mesmo JWT; claims e query adulterados não promovem usuário; bloqueio; diretório bloqueado; autoria forjada rejeitada');
     // Regressão somente leitura usando vínculo de teste anterior, sem fabricar aceite no app.
-    const fixture = JSON.parse(fs.readFileSync('.chat-test.local.json','utf8'));
+    const fixture = JSON.parse(fs.readFileSync(testArtifact('.chat-test.local.json'),'utf8'));
     const existing = [];
     for(const account of fixture.contas.slice(0,2)) {
       const login = await request('POST','/usuarios/login',null,{email:account.email,senha:fixture.senha}); assert.equal(login.status,200); existing.push(login.data);

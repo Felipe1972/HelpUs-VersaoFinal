@@ -30,3 +30,5 @@ Tela chama REST com JWT; servidor autoriza e persiste em MySQL; aceite coordena 
 
 [Funcionalidades](docs/FUNCIONALIDADES-IMPLEMENTADAS.md) · [Roteiro](docs/ROTEIRO-APRESENTACAO.md) · [Banco](docs/BANCO-DADOS-ATUAL.md) · [Limpeza por IDs](docs/LIMPEZA-DADOS.md) · [Checklist](docs/CHECKLIST-TESTES-FINAIS.md).
 Backups privados em .private-backups (ignorados pelo Git). Documentos antigos são checkpoints históricos.
+
+Resultados e credenciais locais de testes ficam em .private-backups/execucoes-testes, fora do Git. Consulte [arquivamento](docs/ARQUIVAMENTO-TESTES.md). Os testes de integração usam esse caminho automaticamente.

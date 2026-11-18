@@ -1,3 +1,4 @@
+const testArtifact = require('./test-artifacts');
 // Integração real. Só grava dados novos identificados; preserva todos os anteriores.
 require('dotenv').config({quiet:true});
 const assert=require('node:assert/strict'),fs=require('fs'),crypto=require('crypto'),http=require('http'),jwt=require('jsonwebtoken');
@@ -45,6 +46,6 @@ const pool=require('../src/config/database'),app=require('../src/app'),chat=requ
  for(const u of [owner,vol]){const data=JSON.stringify(await forOrder(u));for(const secret of ['SEGREDO_',address.rua,String(address.latitude),owner.email,vol.email])assert(!data.includes(secret),'Privacidade: '+secret)}
  const report={run,usuarios:users.map(u=>u.id_usuario),ocorrencia:id,passed:true};
  for(const [t,rows]of Object.entries(before)){const now=(await pool.query('SELECT * FROM '+t))[0];const values=new Set(now.map(r=>JSON.stringify(r)));assert(rows.every(r=>values.has(JSON.stringify(r))),'Registros anteriores modificados em '+t)}
- fs.writeFileSync('.notifications-test.local.json',JSON.stringify(report,null,2));console.log('PASS: oportunidades por papel/bloqueio/autoria; autorização no toque; badge e leitura por conta; aceite idempotente; consentimento; mensagem por destinatário+UUID e sem replay; cancelamento/histórico; privacidade; registros anteriores intactos.');console.log(JSON.stringify(report));
+ fs.writeFileSync(testArtifact('.notifications-test.local.json'),JSON.stringify(report,null,2));console.log('PASS: oportunidades por papel/bloqueio/autoria; autorização no toque; badge e leitura por conta; aceite idempotente; consentimento; mensagem por destinatário+UUID e sem replay; cancelamento/histórico; privacidade; registros anteriores intactos.');console.log(JSON.stringify(report));
  }finally{await new Promise(r=>server.close(r));await pool.end()}
 })().catch(e=>{console.error(e);process.exitCode=1});

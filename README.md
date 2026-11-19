@@ -1,103 +1,59 @@
 # Help Us
 
-Aplicativo acadêmico de ajuda comunitária: pessoas solicitam ajuda e voluntários acompanham pedidos, conversam e realizam atendimentos. Uma mesma conta pode solicitar ajuda e atuar como voluntária.
+O Help Us é um aplicativo desenvolvido como projeto acadêmico que busca conectar pessoas que precisam de ajuda a voluntários da comunidade.
 
-## Tecnologias e estrutura
+Através do aplicativo, os usuários podem solicitar ajuda, conversar com voluntários e acompanhar seus atendimentos.
 
-React Native 0.88, React 19.3 e Expo SDK 58 no aplicativo; Express sobre Node.js, MySQL `help_us2`, JWT e WebSocket no servidor. Axios realiza chamadas HTTP; AsyncStorage mantém a sessão local. As versões exatas estão nos lockfiles.
+## Tecnologias
 
-```text
-backend/
-  server.js         Servidor HTTP e WebSocket
-  src/              routes, controllers, services, middlewares, config, websocket
-  scripts/          Migrações controladas já executadas
-  tests/            Testes unitários e de integração
-mobile/
-  App.js, index.js   Entrada do aplicativo
-  src/              screens, components, navigation, context, data, hooks, services
-  assets/           Imagens e ícones
-  scripts/          Ativação do Node portátil
-  tests/            Testes de lógica e renderização simulada
-database/           SQL e migrações preservados
-docs/               Arquitetura, banco e funcionalidades
-.private-backups/   Apenas artefatos atuais necessários aos testes; ignorados pelo Git
-```
+O aplicativo foi desenvolvido em JavaScript utilizando React Native e Expo SDK 58. O backend utiliza Node.js e Express, com MySQL para armazenamento dos dados.
 
-Históricos e backups foram separados na pasta irmã `../HelpUs-Arquivo`, fora do repositório. Ela contém `backups-banco`, `documentacao-historica`, `execucoes-testes`, `diagnosticos` e o guia privado de defesa técnica. Não publicar seu conteúdo. Novas execuções de testes/migrações ainda podem gerar arquivos privados locais.
+Para a autenticação dos usuários, foi utilizado JWT. A comunicação em tempo real do chat é realizada através de WebSocket.
 
-## Pré-requisitos e instalação
+O mapa utiliza a biblioteca react-native-maps, enquanto a localização é obtida através do expo-location. As notificações são implementadas com expo-notifications.
 
-- MySQL iniciado, com a base `help_us2` preparada.
-- Node 20.19.6 utilizado no backend desta instalação.
-- Node portátil 22.23.5 no mobile; requisito do projeto: Node >=22.13.0.
-- Expo Go compatível, celular e computador com acesso à mesma rede.
+## Estrutura do projeto
 
-Em uma cópia nova, execute `npm ci` em `backend` e em `mobile` (ative primeiro o Node portátil no mobile). Preserve os lockfiles. Não atualize o Expo para executar esta versão.
+A pasta backend contém a API e as regras de negócio do sistema. A pasta mobile contém as telas, componentes e funcionalidades do aplicativo. Na pasta database estão os scripts SQL utilizados durante o desenvolvimento.
 
-O banco já existente não precisa de novas migrações. Os SQL históricos não formam um instalador único: para uma máquina nova, restaure uma cópia autorizada do esquema completo e configure um usuário MySQL apropriado. Veja [Banco de dados](docs/BANCO-DE-DADOS.md).
+## Instalação
 
-Configure `backend/.env` a partir de `backend/.env.example`: `PORT=3000`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=help_us2` e um `JWT_SECRET` forte. Não versionar valores privados.
+Para executar o projeto, é necessário ter Node.js, MySQL e Expo Go instalados.
 
-No `mobile/.env`, defina `EXPO_PUBLIC_API_URL=http://SEU_IPV4_ATUAL:3000`, substituindo pelo IPv4 real do computador. Essa URL é pública no bundle; nunca coloque senhas nesse arquivo.
+Instale as dependências utilizando `npm ci` nas pastas backend e mobile.
 
-## Inicialização manual no VS Code / Git Bash
+Configure o arquivo `.env` do backend com os dados de conexão do MySQL, utilizando o banco `help_us2` e uma chave JWT.
 
-Abra a pasta do projeto. Inicie o MySQL e use dois terminais separados.
+No arquivo `.env` do mobile, configure a variável `EXPO_PUBLIC_API_URL` com o endereço IP do computador e a porta 3000.
+
+É necessário possuir a estrutura atualizada do banco, pois os scripts SQL existentes registram diferentes etapas do desenvolvimento.
+
+## Execução
 
 Backend:
 
-```bash
+
 cd backend
 npm start
-```
+
 
 Mobile:
 
-```bash
 cd mobile
 source ./scripts/use-node.sh
 npx expo start --clear
-```
 
-O script ativa o Node instalado em `%LOCALAPPDATA%/HelpUsTools/node-v22.23.5-win-x64` somente no terminal atual. No PowerShell use `. ./scripts/use-node.ps1`. Ele não instala nem substitui o Node global. Leia o QR com o celular. `Ctrl+C` encerra cada processo. Evite iniciar duas APIs: `EADDRINUSE` indica porta já ocupada.
 
-## Rede e mudança de Wi-Fi
+O mobile utiliza Node.js 22.13 ou superior. O script use-node.sh configura a versão portátil do Node quando instalada no computador.
 
-1. Conecte computador e celular à mesma rede.
-2. Execute `ipconfig` no computador e identifique o IPv4 do adaptador ativo.
-3. Atualize `EXPO_PUBLIC_API_URL` e reinicie Metro com `npx expo start --clear`.
-4. No navegador do celular, teste `http://SEU_IPV4_ATUAL:3000/status`.
-5. `/status/db` permite conferir a conexão com MySQL sem alterar registros.
+O celular e o computador devem estar conectados à mesma rede. Após iniciar o Expo, basta escanear o QR Code.
 
-A API escuta conexões de rede na porta 3000. Se necessário, permita Node/porta 3000 apenas em rede privada confiável no firewall, sem desativá-lo. Em rede escolar com isolamento de clientes, use hotspot que permita comunicação entre os aparelhos, obtenha o novo IPv4 e repita o teste. O túnel do Metro não expõe automaticamente a API. Na instalação local usa-se HTTP; uma implantação pública exige HTTPS/WSS e configuração de segurança própria.
+## Funcionalidades
 
-## Testes
+Cadastro e autenticação, solicitação de ajuda, mapa de ocorrências, chat em tempo real, acompanhamento de atendimentos, notificações, avaliações e contatos de emergência.
 
-Sem criar dados de integração:
+O projeto também possui testes automatizados para auxiliar na validação das funcionalidades.
 
-```bash
-# em backend
-npm test
-# em mobile, após ativar o Node portátil
-npm test
-npm run check:syntax
-```
+## Considerações
 
-Os scripts `test:integration`, `test:ocorrencias`, `test:permissoes`, `test:atendimento`, `test:finalizacao` e `test:notificacoes` do backend gravam dados de teste. Não os execute na base de apresentação sem backup e planejamento de limpeza. Os testes de ocorrências/permissões dependem do artefato atual de chat, preservado em `.private-backups/execucoes-testes/backend`.
-
-Validações adicionais no mobile: `npx expo-doctor`, `npm run export:android` e `npm run export:ios`. Bundles são gerados em `mobile/dist`; não substituem teste físico.
-
-## Limitações reais
-
-- Eventos de notificações são consultados em primeiro plano; não há push remoto com aplicativo fechado. Lembretes locais já agendados dependem do sistema operacional.
-- Distância é estimada em linha reta; não há cálculo próprio de trânsito ou trajeto.
-- SOS abre o discador, sem realizar chamada automática ou despachar equipes.
-- Telas comunitárias antigas mantêm exemplos identificados como demonstração; a Home usa dados reais.
-- GPS, mapas, permissões, notificações, teclado e discador precisam de validação em aparelhos reais.
-- É um protótipo acadêmico; não oferece verificação documental de identidade nem recuperação de senha por e-mail.
-
-## Documentação
-
-[Arquitetura](docs/ARQUITETURA.md) · [Banco de dados](docs/BANCO-DE-DADOS.md) · [Funcionalidades](docs/FUNCIONALIDADES.md).
-
-O guia privado de estudo está em `../HelpUs-Arquivo/GUIA-DEFESA-TECNICA.md`. Ele não faz parte do código distribuído.
+O Help Us é um protótipo acadêmico. As notificações remotas com o aplicativo fechado e a verificação de identidade ainda não foram implementadas. O SOS permite acessar contatos de emergência e abrir o discador, sem realizar chamadas automaticamente.

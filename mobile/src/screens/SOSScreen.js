@@ -48,7 +48,7 @@ export default function SOSScreen({ navigation }) {
         <Text style={ui.title}>Central de contatos</Text>
         <Text style={ui.subtitle}>
           O Help Us não aciona automaticamente serviços de emergência. Ao tocar em Ligar,
-          o discador será aberto. Você decide se deseja realizar a chamada; abrir o
+          o discador será aberto. Você decide se deseja realizar a chamada, abrir o
           discador não significa que uma equipe foi acionada.
         </Text>
       </Card>
